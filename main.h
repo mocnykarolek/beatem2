@@ -15,14 +15,61 @@
 #include <string.h>
 
 
-#define SCREEN_WIDTH 1000
-#define SCREEN_HEIGHT 1000
+#define SCREEN_WIDTH 640
+#define SCREEN_HEIGHT 480
+extern const int WORLD_WIDTH;
+extern const int BACKGROUND_HEIGHT;
+extern const int WORLD_HEIGHT;
+extern const int WORLD_MAX_Y;
+extern const int WORLD_MIN_Y;
+
+#define PLAYER_LEFT  -1
+#define PLAYER_RIGHT 1
+#define PLAYER_UP -1
+#define PLAYER_DOWN 1
+#define PLAYER_SPEED 300
+
+
+
+
+
 
 typedef enum Colors{
     RED,
+    BLACK,
     GREEN,
     BLUE,
+    SKYBLUE,
+    TITLEGRAY,
+
 }Colors;
+
+typedef struct Position {
+    float x;
+    float y;
+} Position;
+
+typedef struct Direction {
+    char x;
+    char y;
+} Direction;
+
+
+typedef struct Player{
+    SDL_Rect rect;
+    Direction direction;
+    SDL_Surface* surface;
+    SDL_Texture* texture;
+    float scale;
+    Position position;
+
+    
+    
+
+
+
+
+} Player;
 
 
 
@@ -32,7 +79,7 @@ typedef struct GameState{
 
     SDL_Event event;
 
-    SDL_Surface *screen, *charset, *player_surface;
+    SDL_Surface *screen, *charset;
     SDL_Texture *scrtex;
     SDL_Window *window;
     SDL_Renderer *renderer;

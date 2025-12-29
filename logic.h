@@ -1,7 +1,10 @@
 #pragma once
 #include  "main.h"
 
-void initialization(GameState* gamestate);
+int initialization(GameState* gamestate);
+
+
+void playerMovement(GameState* gs, Player* p, double delta);
 void mainLoop(GameState* gamestate);
 
 

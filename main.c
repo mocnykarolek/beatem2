@@ -3,16 +3,25 @@
 #include "logic.h"
 #include "render.h"
 
+const int WORLD_WIDTH = SCREEN_WIDTH;
+const int BACKGROUND_HEIGHT = SCREEN_HEIGHT/4;
+// const int WORLD_HEIGHT = SCREEN_HEIGHT;
+const int WORLD_HEIGHT = (int)(SCREEN_HEIGHT - BACKGROUND_HEIGHT);
+
+const int WORLD_MAX_Y = SCREEN_HEIGHT;
+const int WORLD_MIN_Y = BACKGROUND_HEIGHT;
+
 
 int main(int argc, int** argv){
-
-    GameState *gameState;
+    
+    GameState gameState;
 
     printf("jfjfffdgd\n");
 
 
     printf("chuiju");
-    mainLoop(gameState);
+    mainLoop(&gameState);
+
 
 
    return 0;
