@@ -34,13 +34,21 @@ int initialization(GameState* gamestate){
 
 
 void playerMovement(GameState* gs, Player* p, double delta){
+    if(p->position.y< WORLD_MIN_Y){
+        p->position.y = WORLD_MIN_Y;
+    }
+
 
     p->position.x += p->direction.x * PLAYER_SPEED * delta;
     p->position.y += p->direction.y * PLAYER_SPEED * delta;
 
-    p->rect.x = p->position.x;
-    p->rect.y = p->position.y;
-    p->scale = 1 + p->position.y / (WORLD_MAX_Y - WORLD_MIN_Y) *2;
+    p->rect.x = (int)p->position.x;
+    p->rect.y = (int)p->position.y;
+
+
+    
+    p->scale = 1.0f +  p->position.y / ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 0.5f;
+
 
 }
 
@@ -177,7 +185,10 @@ void mainLoop(GameState* gamestate){
         
 
         // DrawTexture(gamestate->renderer, player->texture, player->position.x, player->position.y+player->rect.h, player->rect.w, player->rect.h, player->scale, 0,flip);
-        DrawTexture(gamestate->renderer, player->texture, player->position.x, player->position.y+player->surface->h, player->surface->w, player->surface->h, player->scale, 0, flip);
+        // Zmienna camera_offset (którą masz w mainLoop) jest ważna, 
+// jeśli chcesz przesuwać ekran. W przykładzie była używana.
+
+        
         DrawRectangle(gamestate->screen, 4, 4, SCREEN_WIDTH - 8, 36, color(gamestate, RED), color(gamestate, BLUE));
         sprintf(text, "Czas: %.1lf s %.0lf ""fps ", worldTime, fps);
         DrawString(gamestate->screen, gamestate->screen->w /2 -strlen(text) * 8 /2 ,10, text, gamestate->charset);
@@ -186,8 +197,17 @@ void mainLoop(GameState* gamestate){
         SDL_RenderCopy(gamestate->renderer, gamestate->scrtex, NULL, NULL);
 
 
-        SDL_RenderCopy(gamestate->renderer, player->texture, NULL, &player->rect);
+        // SDL_RenderCopy(gamestate->renderer, player->texture, NULL, &player->rect);
         SDL_UpdateTexture(gamestate->scrtex, NULL, gamestate->screen->pixels, gamestate->screen->pitch);
+        DrawTexture(gamestate->renderer, 
+            player->texture, 
+            (int)player->position.x - camera_offset,     // X z uwzględnieniem kamery
+            (int)player->position.y + player->rect.h,    // Y STÓP (Głowa + Wysokość)
+            player->rect.w,    // Szerokość (100) - bezpieczna z rect
+            player->rect.h,    // Wysokość (100) - bezpieczna z rect
+            player->scale,     // Twoja skala
+            0, 
+            flip);
         SDL_RenderPresent(gamestate->renderer);
 
         frames++;

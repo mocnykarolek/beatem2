@@ -68,7 +68,7 @@ int initialize_player(Player* player, GameState* gamestate,double x, double y){
     player->direction.x = 0;
     player->direction.y = 0;
 
-    player->scale = 1 + player->position.y / (WORLD_MAX_Y - WORLD_MIN_Y) *2;
+    player->scale = 1.0f +  player->position.y / ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 0.5f;
 
 
 
