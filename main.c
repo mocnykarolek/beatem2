@@ -11,10 +11,13 @@ const int WORLD_HEIGHT = (int)(SCREEN_HEIGHT - BACKGROUND_HEIGHT);
 const int WORLD_MAX_Y = SCREEN_HEIGHT;
 const int WORLD_MIN_Y = BACKGROUND_HEIGHT;
 
+const int WORLD_MAX_X = 1000;
+const int WORLD_MIN_X = 0;
+
 
 int main(int argc, int** argv){
     
-    GameState gameState;
+    GameSession gameState;
 
     printf("jfjfffdgd\n");
 

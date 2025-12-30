@@ -2,7 +2,7 @@
 #include  "main.h"
 
 
-int color(GameState* gamestate,Colors color);
+int color(GameSession* gameSession,Colors color);
 
-int initialize_player(Player* player, GameState* gamestate,double x, double y);
-int loadCharset(GameState* gamestate);
+int initialize_player(Player* player, GameSession* gameSession,double x, double y);
+int loadCharset(GameSession* gameSession);

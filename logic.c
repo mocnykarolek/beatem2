@@ -2,40 +2,75 @@
 #include "logic.h"
 
 #include "render.h"
+// [0,1,2,3]
 
-int initialization(GameState* gamestate){
+void addAction(Player* p, char *action){
+    
+    for (int i = 3; i > 0; i--)
+    {
+        p->recentActions[i] = p->recentActions[i-1];
+    }
+    p->recentActions[0] = action;
+    
+
+}
+
+void restartGame(GameState *gms, GameSession* g){
+    
+    if(initialize_player(gms->p, g, (double)(WORLD_WIDTH /2), (double)(WORLD_HEIGHT /2))){
+        return;
+    }
+    *gms->worldTime = 0;
+    *gms->camera_offset = 0;
+
+}
+
+
+int initialization(GameSession* gameSession){
     if(SDL_Init(SDL_INIT_VIDEO) < 0){
         return 0;
     }
 
-    gamestate->window = SDL_CreateWindow("basic", 1, 1, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-    gamestate->renderer = SDL_CreateRenderer(gamestate->window, 1, 0);
-    if (gamestate->renderer == NULL) {
+    gameSession->window = SDL_CreateWindow("basic", 1, 1, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    gameSession->renderer = SDL_CreateRenderer(gameSession->window, 1, 0);
+    if (gameSession->renderer == NULL) {
         SDL_Quit();
         printf("Could not create renderer: %s\n", SDL_GetError());
         return 0;
     };
 
-    gamestate->screen =
+    gameSession->screen =
         SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00FF0000,
                              0x0000FF00, 0x000000FF, 0xFF000000);
 
-    gamestate->scrtex = SDL_CreateTexture(gamestate->renderer, SDL_PIXELFORMAT_ARGB8888,
+    gameSession->scrtex = SDL_CreateTexture(gameSession->renderer, SDL_PIXELFORMAT_ARGB8888,
                                SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH,
                                SCREEN_HEIGHT);
 
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-    SDL_RenderSetLogicalSize(gamestate->renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
-    SDL_SetRenderDrawColor(gamestate->renderer, 0, 0, 0, 255);
-    SDL_SetWindowTitle(gamestate->window, "example_window");
+    SDL_RenderSetLogicalSize(gameSession->renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+    SDL_SetRenderDrawColor(gameSession->renderer, 0, 0, 0, 255);
+    SDL_SetWindowTitle(gameSession->window, "example_window");
 
     return 1;
 }
 
 
-void playerMovement(GameState* gs, Player* p, double delta){
-    if(p->position.y< WORLD_MIN_Y){
+void playerMovement(GameSession* gs, Player* p, double delta){
+    if(p->position.y < WORLD_MIN_Y){
         p->position.y = WORLD_MIN_Y;
+    }
+
+    if(p->position.y + p->rect.h > WORLD_MAX_Y){
+        p->position.y = WORLD_MAX_Y - p->rect.h;
+    }
+
+    if(p->position.x < WORLD_MIN_X){
+        p->position.x = WORLD_MIN_X;
+    }
+
+    if(p->position.x > WORLD_MAX_X){
+        p->position.x = WORLD_MAX_X;
     }
 
 
@@ -47,34 +82,40 @@ void playerMovement(GameState* gs, Player* p, double delta){
 
 
     
-    p->scale = 1.0f +  p->position.y / ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 0.5f;
+    p->scale = 1.0f +  p->position.y / ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 2.0f;
 
 
 }
 
 
 
-void mainLoop(GameState* gamestate){
-    if(!initialization(gamestate)){
+void mainLoop(GameSession* gameSession){
+    GameState *gms = malloc(sizeof(GameState));
+
+    if(!initialization(gameSession)){
         SDL_Quit();
         return;
     }
     
     Player *player= malloc(sizeof(Player));
-
-    if(initialize_player(player, gamestate, (double)(WORLD_WIDTH /2), (double)(WORLD_HEIGHT /2))){
+    char t[20];
+    player->recentActions = malloc(4*sizeof(t));
+    
+    gms->p = player;
+    if(initialize_player(player, gameSession, (double)(WORLD_WIDTH /2), (double)(WORLD_HEIGHT /2))){
         return;
     }
-    if(loadCharset(gamestate)){
+    if(loadCharset(gameSession)){
         return;
 
     }
     SDL_Rect sky_rect = {0,0, SCREEN_WIDTH, SCREEN_WIDTH/4};
 
     int camera_offset = 0;
+    gms->camera_offset = &camera_offset;
     
-    int sky_color = color(gamestate, SKYBLUE);
-    int background_color = color(gamestate, TITLEGRAY);
+    int sky_color = color(gameSession, SKYBLUE);
+    int background_color = color(gameSession, TITLEGRAY);
     int flip = SDL_FLIP_NONE;
 
     int quit = false;
@@ -88,6 +129,7 @@ void mainLoop(GameState* gamestate){
     fpsTimer = 0;
     fps = 0;
     worldTime = 0;
+    gms->worldTime = &worldTime;
 
 
     while(!quit){
@@ -108,29 +150,36 @@ void mainLoop(GameState* gamestate){
 
 
 
-        while(SDL_PollEvent(&gamestate->event)) {
-            switch (gamestate->event.type) {
+        while(SDL_PollEvent(&gameSession->event)) {
+            
+            switch (gameSession->event.type) {
                 case SDL_KEYDOWN: {
-                    switch (gamestate->event.key.keysym.sym)
+                    switch (gameSession->event.key.keysym.sym)
                     {
                     
                     case SDLK_ESCAPE:
                         quit = true;
                         break;
+                    case SDLK_n:
+                        restartGame(gms,gameSession);
+                        break;
                     case SDLK_w:
-                        player->direction.y = PLAYER_UP;
+                        player->direction.y = UP;
+                        
                         printf("Up\n");
                         break;
                     case SDLK_s:
-                        player->direction.y = PLAYER_DOWN;
+                        player->direction.y = DOWN;
                         printf("Downkey\n");
                         break;
                     case SDLK_a:
-                        player->direction.x = PLAYER_LEFT;
+                        player->direction.x = LEFT;
+                        flip = SDL_FLIP_HORIZONTAL;
                         printf("left\n");
                         break;
                     case SDLK_d:
-                        player->direction.x = PLAYER_RIGHT;
+                        player->direction.x = RIGHT;
+                        flip = SDL_FLIP_NONE;
                         printf("right\n");
                         break;
 
@@ -141,14 +190,17 @@ void mainLoop(GameState* gamestate){
                     
                 } break;
                 case SDL_KEYUP:{
-                    switch (gamestate->event.key.keysym.sym){
+                    switch (gameSession->event.key.keysym.sym){
                         case SDLK_s:
                         case SDLK_w: {
+                        
+                        addAction(player, "X");
                         player->direction.y = 0;
                         break;
                         }
                         case SDLK_a:
                         case SDLK_d: {
+                            addAction(player, "Y");
                         player->direction.x = 0;
                         break;
                         }
@@ -170,36 +222,54 @@ void mainLoop(GameState* gamestate){
         };
 
 
-        printf("Player position: %d %d   SCALE: %.02lf\n", player->rect.x, player->rect.y, player->scale);
-        playerMovement(gamestate, player, delta);
+        printf("Player position: %d %d   SCALE: %.02lf C_OFFSET: %d\n", player->rect.x, player->rect.y, player->scale, camera_offset);
+        playerMovement(gameSession, player, delta);
 
 
 
-        SDL_RenderClear(gamestate->renderer);
+        if (player->position.x >  SCREEN_WIDTH + camera_offset - CAMERA_GRACE){
+            camera_offset = player->position.x + CAMERA_GRACE - SCREEN_WIDTH;
+        }
+        if( player->position.x < camera_offset + CAMERA_GRACE){
+            camera_offset = player->position.x - CAMERA_GRACE;
+        }    
+        if(camera_offset < 0){
+            camera_offset = 0;
+        }
+        if(camera_offset > WORLD_MAX_X - SCREEN_WIDTH + player->rect.w * player->scale){
+            camera_offset = WORLD_MAX_X - SCREEN_WIDTH + player->rect.w * player->scale;
+        }
+
+        
+
+
+        SDL_RenderClear(gameSession->renderer);
 
 
 
         
-        SDL_FillRect(gamestate->screen, NULL, background_color);
-        SDL_FillRect(gamestate->screen, &sky_rect, sky_color);
+        SDL_FillRect(gameSession->screen, NULL, background_color);
+        SDL_FillRect(gameSession->screen, &sky_rect, sky_color);
         
 
         // DrawTexture(gamestate->renderer, player->texture, player->position.x, player->position.y+player->rect.h, player->rect.w, player->rect.h, player->scale, 0,flip);
         // Zmienna camera_offset (którą masz w mainLoop) jest ważna, 
 // jeśli chcesz przesuwać ekran. W przykładzie była używana.
 
-        
-        DrawRectangle(gamestate->screen, 4, 4, SCREEN_WIDTH - 8, 36, color(gamestate, RED), color(gamestate, BLUE));
+        char text2[128];
+        DrawRectangle(gameSession->screen, 4, 4, SCREEN_WIDTH - 8, 36, color(gameSession, RED), color(gameSession, BLUE));
         sprintf(text, "Czas: %.1lf s %.0lf ""fps ", worldTime, fps);
-        DrawString(gamestate->screen, gamestate->screen->w /2 -strlen(text) * 8 /2 ,10, text, gamestate->charset);
+        DrawString(gameSession->screen, gameSession->screen->w /2 -strlen(text) * 8 /2 ,10, text, gameSession->charset);
+        sprintf(text2, "[ %s %s %s %s ]", player->recentActions[0] ,player->recentActions[1], player->recentActions[2], player->recentActions[3]);
+        DrawString(gameSession->screen, gameSession->screen->w /2 -strlen(text2) * 8 /2 ,20, text2, gameSession->charset);
 
 
-        SDL_RenderCopy(gamestate->renderer, gamestate->scrtex, NULL, NULL);
+        SDL_RenderCopy(gameSession->renderer, gameSession->scrtex, NULL, NULL);
 
 
         // SDL_RenderCopy(gamestate->renderer, player->texture, NULL, &player->rect);
-        SDL_UpdateTexture(gamestate->scrtex, NULL, gamestate->screen->pixels, gamestate->screen->pitch);
-        DrawTexture(gamestate->renderer, 
+        SDL_UpdateTexture(gameSession->scrtex, NULL, gameSession->screen->pixels, gameSession->screen->pitch);
+        DrawTexture(gameSession->renderer, 
             player->texture, 
             (int)player->position.x - camera_offset,     // X z uwzględnieniem kamery
             (int)player->position.y + player->rect.h,    // Y STÓP (Głowa + Wysokość)
@@ -208,7 +278,7 @@ void mainLoop(GameState* gamestate){
             player->scale,     // Twoja skala
             0, 
             flip);
-        SDL_RenderPresent(gamestate->renderer);
+        SDL_RenderPresent(gameSession->renderer);
 
         frames++;
     }
@@ -216,15 +286,18 @@ void mainLoop(GameState* gamestate){
     printf("gameloop\n");
 
 
-    deallocation(gamestate);
+    deallocation(gameSession, player);
 }
 
 
 
-void deallocation(GameState* gamestate){
+void deallocation(GameSession* gamestate, Player* player){
 
     SDL_DestroyRenderer(gamestate->renderer);
     SDL_DestroyWindow(gamestate->window);
+    free(player);
+
     SDL_Quit();
 
 }
+

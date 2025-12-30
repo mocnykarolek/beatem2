@@ -1,11 +1,11 @@
 #pragma once
 #include  "main.h"
 
-int initialization(GameState* gamestate);
+int initialization(GameSession* gameSession);
 
 
-void playerMovement(GameState* gs, Player* p, double delta);
-void mainLoop(GameState* gamestate);
+void playerMovement(GameSession* gs, Player* p, double delta);
+void mainLoop(GameSession* gamestate);
 
 
-void deallocation(GameState* gamestate);
+void deallocation(GameSession* gamestate, Player* player);

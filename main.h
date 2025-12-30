@@ -22,14 +22,24 @@ extern const int BACKGROUND_HEIGHT;
 extern const int WORLD_HEIGHT;
 extern const int WORLD_MAX_Y;
 extern const int WORLD_MIN_Y;
-
+extern const int WORLD_MAX_X;
+extern const int WORLD_MIN_X;
+#define CAMERA_GRACE 100
 #define PLAYER_LEFT  -1
 #define PLAYER_RIGHT 1
 #define PLAYER_UP -1
 #define PLAYER_DOWN 1
 #define PLAYER_SPEED 300
 
+typedef enum Action {
+    LEFT = -1,
+    RIGHT = 1,
+    UP = -1,
+    DOWN = 1,
+    JUMP = 2,
 
+
+}Action;
 
 
 
@@ -62,7 +72,7 @@ typedef struct Player{
     SDL_Texture* texture;
     float scale;
     Position position;
-
+    char **recentActions;
     
     
 
@@ -71,10 +81,20 @@ typedef struct Player{
 
 } Player;
 
-
-
 typedef struct GameState{
-    int time;
+    Player* p;
+    double *worldTime;
+    int *camera_offset;
+
+
+
+
+
+}GameState;
+
+
+typedef struct GameSession{
+    
 
 
     SDL_Event event;
@@ -84,7 +104,7 @@ typedef struct GameState{
     SDL_Window *window;
     SDL_Renderer *renderer;
 
-}GameState;
+}GameSession;
 
 
 #ifndef UTIL
