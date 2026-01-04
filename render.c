@@ -55,22 +55,30 @@ int initialize_player(Player* player, GameSession* gameSession,double x, double 
         SDL_Quit();
         return 1;
     }
-    player->position.x = x;
-    player->position.y = y;
+    
 
     player->rect.x = x;
     player->rect.y = y;
     player->rect.w = player->surface->w;
     player->rect.h = player->surface->h;
+    player->position.x = x;
+    player->position.y = y + player->rect.h;
     // player->rect.w = 100;
     // player->rect.h = 100;
 
     player->direction.x = 0;
     player->direction.y = 0;
-    player->isJumping = 0;
-    player->jumpingTime_s = 0.5;
+    player->isJumping = RESET_ACTION;
+    player->jumpingTime_s = PLAYER_JUMP_TIME;
     player->RemainingJumpTime_s = player->jumpingTime_s;
 
+    player->isAction = RESET_ACTION;
+    player->actions.type = NOACTION;
+    player->actions.RemainingTime_s = 0;
+
+    player->color.lighAttack = color(gameSession, GREEN);
+    player->color.heavyAttack = color(gameSession, RED);
+    player->lastHeading = 1;
     player->scale = 1.0f +  player->position.y / ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 2.0f;
 
     for (int i = 0; i < 4; i++)
@@ -81,6 +89,38 @@ int initialize_player(Player* player, GameSession* gameSession,double x, double 
 
 
     return 0;
+}
+
+
+void changePlayersColor(Player*p, GameSession *gs, GameState *gms){
+    
+    if(p->actions.type == LIGHT_ATTACK) {
+        SDL_SetTextureColorMod(p->texture, 0, 255, 0);
+        
+        if(p->lastHeading == LEFT) DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) * p->lastHeading * 2 - *gms->camera_offset, p->position.y + p->rect.h /4 , 100 , 30, color(gs, GREEN), color(gs, GREEN));
+        if(p->lastHeading == RIGHT){
+            if(p->position.x + (p->rect.w + 30) - *gms->camera_offset + PLAYER_LIGHT_REACH_px > WORLD_MAX_X){
+                DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) - *gms->camera_offset , p->position.y + p->rect.h /4 , WORLD_MAX_X - p->position.x + (p->rect.w + 30) + *gms->camera_offset + PLAYER_LIGHT_REACH_px , 30, color(gs, GREEN), color(gs, GREEN));
+            }
+            else DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) - *gms->camera_offset , p->position.y + p->rect.h /4 , 100 , 30, color(gs, GREEN), color(gs, GREEN));
+        }
+
+
+    }
+    else if(p->actions.type == HEAVY_ATTACK) {
+        SDL_SetTextureColorMod(p->texture, 255, 0, 0);
+        if(p->lastHeading == LEFT) DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) * p->lastHeading * 2 - *gms->camera_offset, p->position.y + p->rect.h /4 , PLAYER_HEAVY_REACH_px , 30, color(gs, RED), color(gs, RED));
+        if(p->lastHeading == RIGHT){
+            if(p->position.x + (p->rect.w + 30) - *gms->camera_offset + PLAYER_LIGHT_REACH_px > WORLD_MAX_X){
+                DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) - *gms->camera_offset , p->position.y + p->rect.h /4 , WORLD_MAX_X - p->position.x + (p->rect.w + 30) + *gms->camera_offset + PLAYER_HEAVY_REACH_px  , 30, color(gs, GREEN), color(gs, RED));
+            }
+            else DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) - *gms->camera_offset , p->position.y + p->rect.h /4 , PLAYER_HEAVY_REACH_px  , 30, color(gs, RED), color(gs, RED));
+        }
+    }
+    else if(p->actions.type == NOACTION) {
+        SDL_SetTextureColorMod(p->texture, 255, 255, 255);
+    }
+
 }
 
 int loadCharset(GameSession* gameSession){

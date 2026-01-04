@@ -5,7 +5,7 @@ int initialization(GameSession* gameSession);
 
 
 void playerMovement(GameSession* gs, Player* p, double delta);
-void mainLoop(GameSession* gamestate);
+void mainLoop(GameState *gms);
 
 
-void deallocation(GameSession* gamestate, Player* player);
+void deallocation(GameState* gms);

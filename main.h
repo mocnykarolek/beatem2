@@ -31,14 +31,24 @@ extern const int WORLD_MIN_X;
 #define PLAYER_DOWN 1
 #define PLAYER_SPEED 300
 #define RESET_ACTION  0
+#define PLAYER_JUMP_TIME 0.5
+#define PLAYERS_LIGHT_ACTION_DURATION_S 0.2
+#define PLAYERS_HEAVY_ACTION_DURATION_S 0.7
+#define PLAYER_LIGHT_REACH_px 100
+#define PLAYER_HEAVY_REACH_px 200
 
-typedef enum Action {
+#define NOACTION 0
+#define ACTION 1
+
+
+typedef enum {
     LEFT = -1,
     RIGHT = 1,
     UP = -1,
     DOWN = 1,
     JUMP = 1,
-
+    LIGHT_ATTACK =1,
+    HEAVY_ATTACK = -1,
 
 }Action;
 
@@ -55,6 +65,13 @@ typedef enum Colors{
 
 }Colors;
 
+typedef struct  {
+    int type;
+    double Time_s;
+    double RemainingTime_s;
+
+}Player_actions;
+
 typedef struct Position {
     float x;
     float y;
@@ -64,6 +81,14 @@ typedef struct Direction {
     char x;
     char y;
 } Direction;
+
+typedef struct PlayerColor{
+
+    int lighAttack;
+    int heavyAttack;
+
+
+}PlayerColor;
 
 
 typedef struct Player{
@@ -77,23 +102,32 @@ typedef struct Player{
     int isJumping;
     double jumpingTime_s;
     double RemainingJumpTime_s;
-    
-
-
+    Player_actions actions;
+    int isAction;
+    PlayerColor color;
+    int lastHeading;
+    SDL_Rect *attackHitbox;
 
 
 } Player;
 
-typedef struct GameState{
-    Player* p;
-    double *worldTime;
-    int *camera_offset;
+typedef struct Enemy{
+    int Remaininghealth;
+    int Damage;
+
+
+
+}Enemy;
+
+
+typedef struct {
+    SDL_Rect rect;;
+
+} Entity;
 
 
 
 
-
-}GameState;
 
 
 typedef struct GameSession{
@@ -108,6 +142,18 @@ typedef struct GameSession{
     SDL_Renderer *renderer;
 
 }GameSession;
+
+
+typedef struct GameState{
+    Player* p;
+    double *worldTime;
+    int *camera_offset;
+    GameSession *gs;
+
+
+
+
+}GameState;
 
 
 #ifndef UTIL

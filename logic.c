@@ -3,6 +3,74 @@
 
 #include "render.h"
 // [0,1,2,3]
+void lightAttack(Player* p, double delta,GameSession *gs, GameState *gms){
+    if(p->actions.RemainingTime_s == 0){
+        p->actions.RemainingTime_s = PLAYERS_LIGHT_ACTION_DURATION_S;
+    }
+    printf("LIGHT ATTAC EXECUTED\n");
+    if(p->actions.RemainingTime_s > 0){
+        
+        changePlayersColor(p, gs, gms);
+        
+        
+        p->actions.RemainingTime_s -= delta;
+        
+    }
+    
+
+    if(p->actions.RemainingTime_s <= 0 && p->isAction){
+        p->isAction = NOACTION;
+        
+        p->actions.type = NOACTION;
+        p->actions.RemainingTime_s = PLAYERS_LIGHT_ACTION_DURATION_S;
+    }
+
+    
+
+
+
+}
+
+void HeavyAttack(Player* p, double delta,GameSession *gs, GameState *gms){
+    if(p->actions.RemainingTime_s == 0){
+        p->actions.RemainingTime_s = PLAYERS_HEAVY_ACTION_DURATION_S;
+    }
+    
+    if(p->actions.RemainingTime_s > 0){
+        
+        changePlayersColor(p, gs, gms);
+        
+        p->actions.RemainingTime_s -= delta;
+        
+    }
+    
+
+    if(p->actions.RemainingTime_s <= 0 && p->isAction){
+        p->isAction = NOACTION;
+        
+        p->actions.type = NOACTION;
+        p->actions.RemainingTime_s = PLAYERS_HEAVY_ACTION_DURATION_S;
+    }
+}
+
+void actionsHandling(Player* p, double delta, GameSession *gs, GameState *gms){
+    
+    printf("ACTION TYPE: %d\n", p->actions.type);
+    if(p->actions.type == LIGHT_ATTACK){
+        p->isAction = ACTION;
+        lightAttack(p, delta,gs, gms);
+        
+    }
+    else if (p->actions.type == HEAVY_ATTACK){
+        p->isAction = ACTION;
+        HeavyAttack(p, delta,gs, gms);
+    }
+    else if (p->actions.type == NOACTION) changePlayersColor(p, gs ,gms);
+    
+    printf("REMAINING ATTACK: %lf\n", p->actions.RemainingTime_s );
+
+}
+
 
 void addAction(Player* p, char *action){
     
@@ -54,9 +122,11 @@ int initialization(GameSession* gameSession){
 
     return 1;
 }
+
 void handleJumping(GameState* gms, double delta){
 
     if(gms->p->isJumping && gms->p->RemainingJumpTime_s > gms->p->jumpingTime_s / 2 ){
+        
         
         gms->p->RemainingJumpTime_s -= delta;
         gms->p->direction.y = UP;
@@ -68,16 +138,17 @@ void handleJumping(GameState* gms, double delta){
 
     if(gms->p->RemainingJumpTime_s <= 0){
         gms->p->isJumping = 0;
-        gms->p->RemainingJumpTime_s = 2;
+        gms->p->RemainingJumpTime_s = PLAYER_JUMP_TIME;
         gms->p->direction.y = RESET_ACTION;
     }
 
-
+    // printf("Remaining jump timer: %lf\n", gms->p->RemainingJumpTime_s);
 }
 
 
 
 void playerMovement(GameSession* gs, Player* p, double delta){
+    
     if(p->position.y < WORLD_MIN_Y){
         p->position.y = WORLD_MIN_Y;
     }
@@ -115,8 +186,9 @@ void playerMovement(GameSession* gs, Player* p, double delta){
 
 
 
-void mainLoop(GameSession* gameSession){
-    GameState *gms = malloc(sizeof(GameState));
+void mainLoop(GameState *gms){
+    GameSession* gameSession = malloc(sizeof(GameSession));
+    gms->gs = gameSession;
 
     if(!initialization(gameSession)){
         SDL_Quit();
@@ -159,9 +231,14 @@ void mainLoop(GameSession* gameSession){
 
 
     while(!quit){
+        
         t2 = SDL_GetTicks();
-
-
+        SDL_RenderClear(gameSession->renderer);
+        SDL_FillRect(gameSession->screen, NULL, background_color);
+        SDL_FillRect(gameSession->screen, &sky_rect, sky_color);
+        
+        
+        
         delta = (t2-t1) * 0.001;
         t1 = t2;
 
@@ -201,11 +278,13 @@ void mainLoop(GameSession* gameSession){
                     case SDLK_a:
                         player->direction.x = LEFT;
                         flip = SDL_FLIP_HORIZONTAL;
+                        player->lastHeading = LEFT;
                         printf("left\n");
                         break;
                     case SDLK_d:
                         player->direction.x = RIGHT;
                         flip = SDL_FLIP_NONE;
+                        player->lastHeading = RIGHT;
                         printf("right\n");
                         break;
 
@@ -232,7 +311,17 @@ void mainLoop(GameSession* gameSession){
                         }   
                         case SDLK_SPACE:
                             player->isJumping = JUMP;
-                        
+                            addAction(player, "JUMP");
+                            break;
+                        case SDLK_x:
+                            player->actions.type = LIGHT_ATTACK;
+                            addAction(player, "LIGHT");
+                            printf("Light attack executed\n");
+                            break;
+                        case SDLK_y:
+                            player->actions.type = HEAVY_ATTACK;
+                            printf("Heavy attack executed\n");
+                            break;
                     }
 
 
@@ -253,7 +342,8 @@ void mainLoop(GameSession* gameSession){
         printf("Player position: %d %d   SCALE: %.02lf C_OFFSET: %d\n", player->rect.x, player->rect.y, player->scale, camera_offset);
         playerMovement(gameSession, player, delta);
         handleJumping(gms, delta);
-
+        actionsHandling(player, delta, gameSession, gms);
+       
 
         if (player->position.x >  SCREEN_WIDTH + camera_offset - CAMERA_GRACE){
             camera_offset = player->position.x + CAMERA_GRACE - SCREEN_WIDTH;
@@ -270,15 +360,14 @@ void mainLoop(GameSession* gameSession){
 
         
 
-
-        SDL_RenderClear(gameSession->renderer);
-
-
+        
 
         
-        SDL_FillRect(gameSession->screen, NULL, background_color);
-        SDL_FillRect(gameSession->screen, &sky_rect, sky_color);
         
+
+
+
+
 
         // DrawTexture(gamestate->renderer, player->texture, player->position.x, player->position.y+player->rect.h, player->rect.w, player->rect.h, player->scale, 0,flip);
         // Zmienna camera_offset (którą masz w mainLoop) jest ważna, 
@@ -291,6 +380,7 @@ void mainLoop(GameSession* gameSession){
         sprintf(text2, "[ %s %s %s %s ]", player->recentActions[0] ,player->recentActions[1], player->recentActions[2], player->recentActions[3]);
         DrawString(gameSession->screen, gameSession->screen->w /2 -strlen(text2) * 8 /2 ,20, text2, gameSession->charset);
 
+        DrawRectangle(gameSession->screen, player->position.x - camera_offset, player->position.y + player->rect.h, 4, 4, color(gameSession, RED), color(gameSession, BLUE));
 
         SDL_RenderCopy(gameSession->renderer, gameSession->scrtex, NULL, NULL);
 
@@ -314,16 +404,16 @@ void mainLoop(GameSession* gameSession){
     printf("gameloop\n");
 
 
-    deallocation(gameSession, player);
+    deallocation(gms);
 }
 
 
 
-void deallocation(GameSession* gamestate, Player* player){
+void deallocation(GameState* gms){
 
-    SDL_DestroyRenderer(gamestate->renderer);
-    SDL_DestroyWindow(gamestate->window);
-    free(player);
+    SDL_DestroyRenderer(gms->gs->renderer);
+    SDL_DestroyWindow(gms->gs->window);
+    free(gms->p);
 
     SDL_Quit();
 
