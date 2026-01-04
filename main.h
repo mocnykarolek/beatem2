@@ -30,13 +30,14 @@ extern const int WORLD_MIN_X;
 #define PLAYER_UP -1
 #define PLAYER_DOWN 1
 #define PLAYER_SPEED 300
+#define RESET_ACTION  0
 
 typedef enum Action {
     LEFT = -1,
     RIGHT = 1,
     UP = -1,
     DOWN = 1,
-    JUMP = 2,
+    JUMP = 1,
 
 
 }Action;
@@ -73,7 +74,9 @@ typedef struct Player{
     float scale;
     Position position;
     char **recentActions;
-    
+    int isJumping;
+    double jumpingTime_s;
+    double RemainingJumpTime_s;
     
 
 

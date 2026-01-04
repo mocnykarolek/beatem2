@@ -54,6 +54,27 @@ int initialization(GameSession* gameSession){
 
     return 1;
 }
+void handleJumping(GameState* gms, double delta){
+
+    if(gms->p->isJumping && gms->p->RemainingJumpTime_s > gms->p->jumpingTime_s / 2 ){
+        
+        gms->p->RemainingJumpTime_s -= delta;
+        gms->p->direction.y = UP;
+    }
+    else if(gms->p->isJumping && gms->p->RemainingJumpTime_s > 0){
+        gms->p->RemainingJumpTime_s -= delta;
+        gms->p->direction.y = DOWN;
+    }
+
+    if(gms->p->RemainingJumpTime_s <= 0){
+        gms->p->isJumping = 0;
+        gms->p->RemainingJumpTime_s = 2;
+        gms->p->direction.y = RESET_ACTION;
+    }
+
+
+}
+
 
 
 void playerMovement(GameSession* gs, Player* p, double delta){
@@ -75,14 +96,19 @@ void playerMovement(GameSession* gs, Player* p, double delta){
 
 
     p->position.x += p->direction.x * PLAYER_SPEED * delta;
-    p->position.y += p->direction.y * PLAYER_SPEED * delta;
 
+    
+    p->position.y += p->direction.y * PLAYER_SPEED * delta;
+    
     p->rect.x = (int)p->position.x;
     p->rect.y = (int)p->position.y;
 
 
     
     p->scale = 1.0f +  p->position.y / ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 2.0f;
+
+
+
 
 
 }
@@ -195,15 +221,17 @@ void mainLoop(GameSession* gameSession){
                         case SDLK_w: {
                         
                         addAction(player, "X");
-                        player->direction.y = 0;
+                        player->direction.y = RESET_ACTION;
                         break;
                         }
                         case SDLK_a:
                         case SDLK_d: {
                             addAction(player, "Y");
-                        player->direction.x = 0;
+                        player->direction.x = RESET_ACTION;
                         break;
-                        }
+                        }   
+                        case SDLK_SPACE:
+                            player->isJumping = JUMP;
                         
                     }
 
@@ -224,7 +252,7 @@ void mainLoop(GameSession* gameSession){
 
         printf("Player position: %d %d   SCALE: %.02lf C_OFFSET: %d\n", player->rect.x, player->rect.y, player->scale, camera_offset);
         playerMovement(gameSession, player, delta);
-
+        handleJumping(gms, delta);
 
 
         if (player->position.x >  SCREEN_WIDTH + camera_offset - CAMERA_GRACE){

@@ -67,6 +67,9 @@ int initialize_player(Player* player, GameSession* gameSession,double x, double 
 
     player->direction.x = 0;
     player->direction.y = 0;
+    player->isJumping = 0;
+    player->jumpingTime_s = 0.5;
+    player->RemainingJumpTime_s = player->jumpingTime_s;
 
     player->scale = 1.0f +  player->position.y / ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 2.0f;
 
