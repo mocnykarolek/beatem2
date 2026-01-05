@@ -93,14 +93,14 @@ int initialize_player(Player* player, GameSession* gameSession,double x, double 
 
 
 void changePlayersColor(Player*p, GameSession *gs, GameState *gms){
-    
+    //old v
     if(p->actions.type == LIGHT_ATTACK) {
         SDL_SetTextureColorMod(p->texture, 0, 255, 0);
         
         if(p->lastHeading == LEFT) DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) * p->lastHeading * 2 - *gms->camera_offset, p->position.y + p->rect.h /4 , 100 , 30, color(gs, GREEN), color(gs, GREEN));
         if(p->lastHeading == RIGHT){
-            if(p->position.x + (p->rect.w + 30) - *gms->camera_offset + PLAYER_LIGHT_REACH_px > WORLD_MAX_X){
-                DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) - *gms->camera_offset , p->position.y + p->rect.h /4 , WORLD_MAX_X - p->position.x + (p->rect.w + 30) + *gms->camera_offset + PLAYER_LIGHT_REACH_px , 30, color(gs, GREEN), color(gs, GREEN));
+            if(p->position.x + (p->rect.w + 30) - *gms->camera_offset + PLAYER_LIGHT_REACH_px > SCREEN_WIDTH){
+                DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) - *gms->camera_offset , p->position.y + p->rect.h /4 , SCREEN_WIDTH - p->position.x + (p->rect.w + 30) + *gms->camera_offset + PLAYER_LIGHT_REACH_px , 30, color(gs, GREEN), color(gs, GREEN));
             }
             else DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) - *gms->camera_offset , p->position.y + p->rect.h /4 , 100 , 30, color(gs, GREEN), color(gs, GREEN));
         }
@@ -120,6 +120,90 @@ void changePlayersColor(Player*p, GameSession *gs, GameState *gms){
     else if(p->actions.type == NOACTION) {
         SDL_SetTextureColorMod(p->texture, 255, 255, 255);
     }
+
+}
+void PlayerAttackState(Player*p, GameSession *gs, GameState *gms){
+
+    if(p->actions.type == LIGHT_ATTACK){
+        int colorP = color(gs, GREEN);
+        SDL_SetTextureColorMod(p->texture, 0, 255, 0);
+
+        if(p->lastHeading == RIGHT){
+            double AttackScreenPosition = p->position.x + p->rect.w + 30 - *gms->camera_offset;
+            double spaceAvailable = SCREEN_WIDTH - AttackScreenPosition;
+
+            // 
+            
+
+            if(spaceAvailable < PLAYER_LIGHT_REACH_px){
+                DrawRectangle(gs->screen,AttackScreenPosition, p->position.y - (p->rect.h /2), spaceAvailable, 30, colorP, colorP);
+            }else DrawRectangle(gs->screen,AttackScreenPosition, p->position.y - (p->rect.h /2), PLAYER_LIGHT_REACH_px, 30, colorP, colorP);
+
+
+        }
+        else if(p->lastHeading == LEFT){
+            double AttackScreenPosition = p->position.x - PLAYER_LIGHT_REACH_px - *gms->camera_offset;
+            double spaceAvailable = p->position.x;
+            
+            // *gms->debug_exit = 1;
+            if(AttackScreenPosition < 0){
+                DrawRectangle(gs->screen,0, p->position.y - (p->rect.h /2), spaceAvailable, 30, colorP, colorP);
+                printf("%lf . %lf\n", AttackScreenPosition, spaceAvailable);
+            }else
+            DrawRectangle(gs->screen,AttackScreenPosition, p->position.y - (p->rect.h /2), PLAYER_LIGHT_REACH_px, 30, colorP, colorP);
+
+
+        }
+
+
+
+
+
+
+    }
+    else if(p->actions.type == HEAVY_ATTACK){
+        int colorP = color(gs, RED);
+        SDL_SetTextureColorMod(p->texture, 255, 0, 0);
+
+        if(p->lastHeading == RIGHT){
+            double AttackScreenPosition = p->position.x + p->rect.w + 30 - *gms->camera_offset;
+            double spaceAvailable = SCREEN_WIDTH - AttackScreenPosition;
+
+            // 
+            
+
+            if(spaceAvailable < PLAYER_HEAVY_REACH_px){
+                DrawRectangle(gs->screen,AttackScreenPosition, p->position.y - (p->rect.h /2), spaceAvailable, 30, colorP, colorP);
+            }else DrawRectangle(gs->screen,AttackScreenPosition, p->position.y - (p->rect.h /2), PLAYER_HEAVY_REACH_px, 30, colorP, colorP);
+
+
+        }
+        else if(p->lastHeading == LEFT){
+            double AttackScreenPosition = p->position.x - PLAYER_HEAVY_REACH_px - *gms->camera_offset;
+            double spaceAvailable = p->position.x;
+            
+            // *gms->debug_exit = 1;
+            if(AttackScreenPosition < 0){
+                DrawRectangle(gs->screen,0, p->position.y - (p->rect.h /2), spaceAvailable, 30, colorP, colorP);
+                printf("%lf . %lf\n", AttackScreenPosition, spaceAvailable);
+            }else
+            DrawRectangle(gs->screen,AttackScreenPosition, p->position.y - (p->rect.h /2), PLAYER_HEAVY_REACH_px, 30, colorP, colorP);
+
+
+        }
+
+
+
+
+
+
+    }
+    else if(p->actions.type == NOACTION) {
+        SDL_SetTextureColorMod(p->texture, 255, 255, 255);
+    }
+
+
+
 
 }
 

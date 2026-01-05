@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 
 #define SCREEN_WIDTH 640
@@ -37,6 +38,7 @@ extern const int WORLD_MIN_X;
 #define PLAYER_LIGHT_REACH_px 100
 #define PLAYER_HEAVY_REACH_px 200
 #define COMBO_DELAY_S 2
+#define DASH_TIME 0.1
 
 #define NOACTION 0
 #define ACTION 1
@@ -96,7 +98,7 @@ typedef struct{
 
     int comboType;
     double comboTimeRemaining;
-    int comboInitialTime;
+    double comboInitialTime;
 
 }Combo;
 
@@ -175,7 +177,7 @@ typedef struct GameState{
     int *camera_offset;
     GameSession *gs;
 
-
+    int *debug_exit;
 
 
 }GameState;

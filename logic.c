@@ -7,9 +7,20 @@
 char* checkCombo(Player *p){
     char** comboBuffer = p->recentActions;
 
-    if(comboBuffer[0] == comboBuffer[1] && comboBuffer[1] == comboBuffer[2] && comboBuffer[0] != NOACTIONCHAR) return comboBuffer[0];
-    else if (comboBuffer[1] == comboBuffer[2] && comboBuffer[2] == comboBuffer[3] && comboBuffer[1]  != NOACTIONCHAR) return comboBuffer[1];
-    else return NOACTIONCHAR;
+    if(strcmp(comboBuffer[0], comboBuffer[1]) == 0 && 
+       strcmp(comboBuffer[1], comboBuffer[2]) == 0 && 
+       strcmp(comboBuffer[0], NOACTIONCHAR) != 0) {
+           return comboBuffer[0];
+    }
+    
+    else if (strcmp(comboBuffer[1], comboBuffer[2]) == 0 && 
+             strcmp(comboBuffer[2], comboBuffer[3]) == 0 && 
+             strcmp(comboBuffer[1], NOACTIONCHAR) != 0) {
+           return comboBuffer[1];
+    }
+    else {
+        return NOACTIONCHAR;
+    }
 
 
 }
@@ -27,8 +38,18 @@ void comboHandler(Player*p, double delta){
         case LEFT_DASH:
             p->position.x += LEFT * p->speed * 2 * delta;   
             
-
-
+            break;
+        case RIGHT_DASH:
+            p->position.x += RIGHT * p->speed * 2 * delta;   
+            
+            break;
+        case UP_DASH:
+            p->position.y += UP * p->speed * 2 * delta;   
+            
+            break;
+        case DOWN_DASH:
+            p->position.y += DOWN * p->speed * 2 * delta;   
+            
             break;
         
         default:
@@ -47,7 +68,7 @@ void lightAttack(Player* p, double delta,GameSession *gs, GameState *gms){
     
     if(p->actions.RemainingTime_s > 0){
         
-        changePlayersColor(p, gs, gms);
+        PlayerAttackState(p, gs, gms);
         
         
         p->actions.RemainingTime_s -= delta;
@@ -75,7 +96,7 @@ void HeavyAttack(Player* p, double delta,GameSession *gs, GameState *gms){
     
     if(p->actions.RemainingTime_s > 0){
         
-        changePlayersColor(p, gs, gms);
+        PlayerAttackState(p, gs, gms);
         
         p->actions.RemainingTime_s -= delta;
         
@@ -102,7 +123,7 @@ void actionsHandling(Player* p, double delta, GameSession *gs, GameState *gms){
         p->isAction = ACTION;
         HeavyAttack(p, delta,gs, gms);
     }
-    else if (p->actions.type == NOACTION) changePlayersColor(p, gs ,gms);
+    else if (p->actions.type == NOACTION) PlayerAttackState(p, gs, gms);
     
     
 
@@ -170,22 +191,22 @@ Combo InitCombo(char* comboChar){
     {
     case LEFT_DASH:
         current_combo.comboType = LEFT_DASH;
-        current_combo.comboInitialTime = 0.5f;
+        current_combo.comboInitialTime = DASH_TIME;
         current_combo.comboTimeRemaining = current_combo.comboInitialTime;
         break;
     case RIGHT_DASH:
         current_combo.comboType = RIGHT_DASH;
-        current_combo.comboInitialTime = 1;
+        current_combo.comboInitialTime = DASH_TIME;
         current_combo.comboTimeRemaining = current_combo.comboInitialTime;
         break;
     case UP_DASH:
         current_combo.comboType = UP_DASH;
-        current_combo.comboInitialTime = 1;
+        current_combo.comboInitialTime = DASH_TIME;
         current_combo.comboTimeRemaining = current_combo.comboInitialTime;
         break;
     case DOWN_DASH:
         current_combo.comboType = DOWN_DASH;
-        current_combo.comboInitialTime = 1;
+        current_combo.comboInitialTime = DASH_TIME;
         current_combo.comboTimeRemaining = current_combo.comboInitialTime;
         break;
     case LIGHT_COMBO:
@@ -300,6 +321,9 @@ void mainLoop(GameState *gms){
 
 
     while(!quit){
+        if(*gms->debug_exit == 1){
+            break;
+        }
         
         t2 = SDL_GetTicks();
         SDL_RenderClear(gameSession->renderer);
@@ -373,37 +397,44 @@ void mainLoop(GameState *gms){
 
                         case SDLK_s:
                         addAction(player, "DOWN");
+                        timer_s = 0;
                         player->direction.y = RESET_ACTION;
                         break;
 
                         case SDLK_w: 
                         
                         addAction(player, "UP");
+                        timer_s = 0;
                         player->direction.y = RESET_ACTION;
                         break;
                         
                         case SDLK_a:
                         addAction(player, "LEFT");
+                        timer_s = 0;
                         player->direction.x = RESET_ACTION;
                         break;
 
                         case SDLK_d: 
                             addAction(player, "RIGHT");
+                            timer_s = 0;
                         player->direction.x = RESET_ACTION;
                         break;
                           
                         case SDLK_SPACE:
                             player->isJumping = JUMP;
                             addAction(player, "JUMP");
+                            timer_s = 0;
                             break;
                         case SDLK_x:
                             player->actions.type = LIGHT_ATTACK;
                             addAction(player, "LIGHT");
+                            timer_s = 0;
                             // printf("Light attack executed\n");
                             break;
                         case SDLK_y:
                             player->actions.type = HEAVY_ATTACK;
                             addAction(player, "HEAVY");
+                            timer_s = 0;
                             // printf("Heavy attack executed\n");
                             break;
                     }
@@ -434,6 +465,9 @@ void mainLoop(GameState *gms){
         if(strcmp(checkCombo(player), NOACTIONCHAR) != 0 && player->comboType.comboType == NO_COMBO){
             printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType, combo_delay);
             player->comboType = InitCombo(checkCombo(player));
+            for(int i = 0; i < 4; i++) {
+            player->recentActions[i] = NOACTIONCHAR; 
+    }
             
         }
         if(player->comboType.comboType != NO_COMBO) player->comboType.comboTimeRemaining -= delta;

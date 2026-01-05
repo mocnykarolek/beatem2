@@ -20,6 +20,9 @@ int main(int argc, char** argv){
     
     
     GameState *gms = malloc(sizeof(GameState));
+    int exit = 0;
+    gms->debug_exit = &exit;
+
     printf("jfjfffdgd\n");
 
 
