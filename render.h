@@ -6,3 +6,4 @@ int color(GameSession* gameSession,Colors color);
 void changePlayersColor(Player*p, GameSession *gs, GameState *gms);
 int initialize_player(Player* player, GameSession* gameSession,double x, double y);
 int loadCharset(GameSession* gameSession);
+int initialization(GameSession* gameSession);

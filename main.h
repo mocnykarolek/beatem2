@@ -36,9 +36,11 @@ extern const int WORLD_MIN_X;
 #define PLAYERS_HEAVY_ACTION_DURATION_S 0.7
 #define PLAYER_LIGHT_REACH_px 100
 #define PLAYER_HEAVY_REACH_px 200
+#define COMBO_DELAY_S 2
 
 #define NOACTION 0
 #define ACTION 1
+#define NOACTIONCHAR "..."
 
 
 typedef enum {
@@ -90,9 +92,18 @@ typedef struct PlayerColor{
 
 }PlayerColor;
 
+typedef struct{
+
+    int comboType;
+    double comboTimeRemaining;
+    int comboInitialTime;
+
+}Combo;
+
 
 typedef struct Player{
     SDL_Rect rect;
+    int speed;
     Direction direction;
     SDL_Surface* surface;
     SDL_Texture* texture;
@@ -107,9 +118,23 @@ typedef struct Player{
     PlayerColor color;
     int lastHeading;
     SDL_Rect *attackHitbox;
+    
+    Combo comboType;
 
 
 } Player;
+
+typedef enum{
+    LEFT_DASH = 1,
+    RIGHT_DASH = 2,
+    UP_DASH = 3,
+    DOWN_DASH = 4,
+    LIGHT_COMBO =5,
+    HEAVY_COMBO = 6,
+    NO_COMBO = 0,
+
+}ComboTypes;
+
 
 typedef struct Enemy{
     int Remaininghealth;

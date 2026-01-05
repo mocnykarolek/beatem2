@@ -55,7 +55,7 @@ int initialize_player(Player* player, GameSession* gameSession,double x, double 
         SDL_Quit();
         return 1;
     }
-    
+    player->speed = PLAYER_SPEED;
 
     player->rect.x = x;
     player->rect.y = y;
@@ -80,7 +80,7 @@ int initialize_player(Player* player, GameSession* gameSession,double x, double 
     player->color.heavyAttack = color(gameSession, RED);
     player->lastHeading = 1;
     player->scale = 1.0f +  player->position.y / ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 2.0f;
-
+    player->comboType.comboType = NO_COMBO;
     for (int i = 0; i < 4; i++)
     {
         player->recentActions[i] = "...";
@@ -109,7 +109,7 @@ void changePlayersColor(Player*p, GameSession *gs, GameState *gms){
     }
     else if(p->actions.type == HEAVY_ATTACK) {
         SDL_SetTextureColorMod(p->texture, 255, 0, 0);
-        if(p->lastHeading == LEFT) DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) * p->lastHeading * 2 - *gms->camera_offset, p->position.y + p->rect.h /4 , PLAYER_HEAVY_REACH_px , 30, color(gs, RED), color(gs, RED));
+        if(p->lastHeading == LEFT) DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) * p->lastHeading * 4 - *gms->camera_offset, p->position.y + p->rect.h /4 , PLAYER_HEAVY_REACH_px , 30, color(gs, RED), color(gs, RED));
         if(p->lastHeading == RIGHT){
             if(p->position.x + (p->rect.w + 30) - *gms->camera_offset + PLAYER_LIGHT_REACH_px > WORLD_MAX_X){
                 DrawRectangle(gs->screen, p->position.x + (p->rect.w + 30) - *gms->camera_offset , p->position.y + p->rect.h /4 , WORLD_MAX_X - p->position.x + (p->rect.w + 30) + *gms->camera_offset + PLAYER_HEAVY_REACH_px  , 30, color(gs, GREEN), color(gs, RED));
@@ -138,6 +138,35 @@ int loadCharset(GameSession* gameSession){
     return 0;
 }
 
+
+int initialization(GameSession* gameSession){
+    if(SDL_Init(SDL_INIT_VIDEO) < 0){
+        return 0;
+    }
+
+    gameSession->window = SDL_CreateWindow("basic", 1, 1, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+    gameSession->renderer = SDL_CreateRenderer(gameSession->window, 1, 0);
+    if (gameSession->renderer == NULL) {
+        SDL_Quit();
+        printf("Could not create renderer: %s\n", SDL_GetError());
+        return 0;
+    };
+
+    gameSession->screen =
+        SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00FF0000,
+                             0x0000FF00, 0x000000FF, 0xFF000000);
+
+    gameSession->scrtex = SDL_CreateTexture(gameSession->renderer, SDL_PIXELFORMAT_ARGB8888,
+                               SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH,
+                               SCREEN_HEIGHT);
+
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+    SDL_RenderSetLogicalSize(gameSession->renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
+    SDL_SetRenderDrawColor(gameSession->renderer, 0, 0, 0, 255);
+    SDL_SetWindowTitle(gameSession->window, "example_window");
+
+    return 1;
+}
 
 // SDL_Texture *texture(){
 

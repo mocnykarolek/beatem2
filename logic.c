@@ -3,11 +3,48 @@
 
 #include "render.h"
 // [0,1,2,3]
+
+char* checkCombo(Player *p){
+    char** comboBuffer = p->recentActions;
+
+    if(comboBuffer[0] == comboBuffer[1] && comboBuffer[1] == comboBuffer[2] && comboBuffer[0] != NOACTIONCHAR) return comboBuffer[0];
+    else if (comboBuffer[1] == comboBuffer[2] && comboBuffer[2] == comboBuffer[3] && comboBuffer[1]  != NOACTIONCHAR) return comboBuffer[1];
+    else return NOACTIONCHAR;
+
+
+}
+
+void comboHandler(Player*p, double delta){
+    
+    if(p->comboType.comboType != NO_COMBO){
+        if(p->comboType.comboTimeRemaining <= 0){
+            p->comboType.comboType = NO_COMBO;
+        }
+        
+
+        switch (p->comboType.comboType)
+        {
+        case LEFT_DASH:
+            p->position.x += LEFT * p->speed * 2 * delta;   
+            p->comboType.comboTimeRemaining -= delta;
+
+
+            break;
+        
+        default:
+            break;
+        }
+
+
+    }
+
+}
+
 void lightAttack(Player* p, double delta,GameSession *gs, GameState *gms){
     if(p->actions.RemainingTime_s == 0){
         p->actions.RemainingTime_s = PLAYERS_LIGHT_ACTION_DURATION_S;
     }
-    printf("LIGHT ATTAC EXECUTED\n");
+    
     if(p->actions.RemainingTime_s > 0){
         
         changePlayersColor(p, gs, gms);
@@ -55,7 +92,7 @@ void HeavyAttack(Player* p, double delta,GameSession *gs, GameState *gms){
 
 void actionsHandling(Player* p, double delta, GameSession *gs, GameState *gms){
     
-    printf("ACTION TYPE: %d\n", p->actions.type);
+    
     if(p->actions.type == LIGHT_ATTACK){
         p->isAction = ACTION;
         lightAttack(p, delta,gs, gms);
@@ -67,12 +104,13 @@ void actionsHandling(Player* p, double delta, GameSession *gs, GameState *gms){
     }
     else if (p->actions.type == NOACTION) changePlayersColor(p, gs ,gms);
     
-    printf("REMAINING ATTACK: %lf\n", p->actions.RemainingTime_s );
+    
 
 }
 
 
 void addAction(Player* p, char *action){
+    
     
     for (int i = 3; i > 0; i--)
     {
@@ -94,34 +132,6 @@ void restartGame(GameState *gms, GameSession* g){
 }
 
 
-int initialization(GameSession* gameSession){
-    if(SDL_Init(SDL_INIT_VIDEO) < 0){
-        return 0;
-    }
-
-    gameSession->window = SDL_CreateWindow("basic", 1, 1, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
-    gameSession->renderer = SDL_CreateRenderer(gameSession->window, 1, 0);
-    if (gameSession->renderer == NULL) {
-        SDL_Quit();
-        printf("Could not create renderer: %s\n", SDL_GetError());
-        return 0;
-    };
-
-    gameSession->screen =
-        SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x00FF0000,
-                             0x0000FF00, 0x000000FF, 0xFF000000);
-
-    gameSession->scrtex = SDL_CreateTexture(gameSession->renderer, SDL_PIXELFORMAT_ARGB8888,
-                               SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH,
-                               SCREEN_HEIGHT);
-
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-    SDL_RenderSetLogicalSize(gameSession->renderer, SCREEN_WIDTH, SCREEN_HEIGHT);
-    SDL_SetRenderDrawColor(gameSession->renderer, 0, 0, 0, 255);
-    SDL_SetWindowTitle(gameSession->window, "example_window");
-
-    return 1;
-}
 
 void handleJumping(GameState* gms, double delta){
 
@@ -145,6 +155,62 @@ void handleJumping(GameState* gms, double delta){
     // printf("Remaining jump timer: %lf\n", gms->p->RemainingJumpTime_s);
 }
 
+Combo InitCombo(char* comboChar){
+    int Combotype;
+    if(strcmp(comboChar, "LEFT")) Combotype = LEFT_DASH;
+    else if(strcmp(comboChar, "RIGHT")) Combotype = RIGHT_DASH;
+    else if(strcmp(comboChar, "UP")) Combotype = UP_DASH;
+    else if(strcmp(comboChar, "DOWN")) Combotype = DOWN_DASH;
+    else if(strcmp(comboChar, "LIGHT")) Combotype = LIGHT_COMBO;
+    else if(strcmp(comboChar, "HEAVY")) Combotype = HEAVY_COMBO;
+    else Combotype = NO_COMBO;
+    
+    Combo current_combo;
+    switch (Combotype)
+    {
+    case LEFT_DASH:
+        current_combo.comboType = LEFT_DASH;
+        current_combo.comboInitialTime = 1;
+        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
+        break;
+    case RIGHT_DASH:
+        current_combo.comboType = RIGHT_DASH;
+        current_combo.comboInitialTime = 1;
+        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
+        break;
+    case UP_DASH:
+        current_combo.comboType = UP_DASH;
+        current_combo.comboInitialTime = 1;
+        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
+        break;
+    case DOWN_DASH:
+        current_combo.comboType = DOWN_DASH;
+        current_combo.comboInitialTime = 1;
+        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
+        break;
+    case LIGHT_COMBO:
+        current_combo.comboType = LIGHT_COMBO;
+        current_combo.comboInitialTime = 2;
+        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
+        break;
+    case HEAVY_COMBO:
+        current_combo.comboType = HEAVY_COMBO;
+        current_combo.comboInitialTime = 1;
+        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
+        break;
+    
+    default:
+        current_combo.comboType = NO_COMBO;
+        current_combo.comboInitialTime = 0;
+        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
+        break;
+    }
+    
+
+    return current_combo;
+
+
+}
 
 
 void playerMovement(GameSession* gs, Player* p, double delta){
@@ -165,11 +231,12 @@ void playerMovement(GameSession* gs, Player* p, double delta){
         p->position.x = WORLD_MAX_X;
     }
 
+    
 
-    p->position.x += p->direction.x * PLAYER_SPEED * delta;
+    p->position.x += p->direction.x * p->speed * delta;
 
     
-    p->position.y += p->direction.y * PLAYER_SPEED * delta;
+    p->position.y += p->direction.y * p->speed * delta;
     
     p->rect.x = (int)p->position.x;
     p->rect.y = (int)p->position.y;
@@ -218,16 +285,18 @@ void mainLoop(GameState *gms){
 
     int quit = false;
     int t1, t2, frames, rc;
-    double delta, worldTime, fpsTimer, fps, distance;
+    double delta, worldTime, fpsTimer, fps, distance, timer_s, combo_delay;
 
     t1 = SDL_GetTicks();
 
     char text[128];
+    combo_delay = COMBO_DELAY_S;
     frames = 0;
     fpsTimer = 0;
     fps = 0;
     worldTime = 0;
     gms->worldTime = &worldTime;
+    timer_s = 0;
 
 
     while(!quit){
@@ -243,6 +312,7 @@ void mainLoop(GameState *gms){
         t1 = t2;
 
         worldTime +=delta;
+        timer_s +=delta;
 
         fpsTimer += delta;
         if(fpsTimer > 0.5) {
@@ -250,7 +320,11 @@ void mainLoop(GameState *gms){
             frames = 0;
             fpsTimer -= 0.5;
         }
-
+        
+        if(timer_s >= 1 ){
+            addAction(player, NOACTIONCHAR);
+            timer_s = 0;
+        }
 
 
         while(SDL_PollEvent(&gameSession->event)) {
@@ -269,23 +343,23 @@ void mainLoop(GameState *gms){
                     case SDLK_w:
                         player->direction.y = UP;
                         
-                        printf("Up\n");
+                        
                         break;
                     case SDLK_s:
                         player->direction.y = DOWN;
-                        printf("Downkey\n");
+                        
                         break;
                     case SDLK_a:
                         player->direction.x = LEFT;
                         flip = SDL_FLIP_HORIZONTAL;
                         player->lastHeading = LEFT;
-                        printf("left\n");
+                        
                         break;
                     case SDLK_d:
                         player->direction.x = RIGHT;
                         flip = SDL_FLIP_NONE;
                         player->lastHeading = RIGHT;
-                        printf("right\n");
+                        
                         break;
 
 
@@ -296,19 +370,28 @@ void mainLoop(GameState *gms){
                 } break;
                 case SDL_KEYUP:{
                     switch (gameSession->event.key.keysym.sym){
+
                         case SDLK_s:
-                        case SDLK_w: {
-                        
-                        addAction(player, "X");
+                        addAction(player, "DOWN");
                         player->direction.y = RESET_ACTION;
                         break;
-                        }
+
+                        case SDLK_w: 
+                        
+                        addAction(player, "UP");
+                        player->direction.y = RESET_ACTION;
+                        break;
+                        
                         case SDLK_a:
-                        case SDLK_d: {
-                            addAction(player, "Y");
+                        addAction(player, "LEFT");
                         player->direction.x = RESET_ACTION;
                         break;
-                        }   
+
+                        case SDLK_d: 
+                            addAction(player, "RIGHT");
+                        player->direction.x = RESET_ACTION;
+                        break;
+                          
                         case SDLK_SPACE:
                             player->isJumping = JUMP;
                             addAction(player, "JUMP");
@@ -316,11 +399,12 @@ void mainLoop(GameState *gms){
                         case SDLK_x:
                             player->actions.type = LIGHT_ATTACK;
                             addAction(player, "LIGHT");
-                            printf("Light attack executed\n");
+                            // printf("Light attack executed\n");
                             break;
                         case SDLK_y:
                             player->actions.type = HEAVY_ATTACK;
-                            printf("Heavy attack executed\n");
+                            addAction(player, "HEAVY");
+                            // printf("Heavy attack executed\n");
                             break;
                     }
 
@@ -343,7 +427,20 @@ void mainLoop(GameState *gms){
         playerMovement(gameSession, player, delta);
         handleJumping(gms, delta);
         actionsHandling(player, delta, gameSession, gms);
-       
+        printf("checkCombo: %s\n", checkCombo(player));
+        printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType, combo_delay);
+        int test = checkCombo(player) != NOACTIONCHAR;
+        printf("%d\n", test);
+        if(checkCombo(player) != NOACTIONCHAR && player->comboType.comboType == NO_COMBO){
+            printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType, combo_delay);
+            player->comboType = InitCombo(checkCombo(player));
+            
+        }
+        printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType, combo_delay);
+        break;
+        
+        comboHandler(player, delta);
+        
 
         if (player->position.x >  SCREEN_WIDTH + camera_offset - CAMERA_GRACE){
             camera_offset = player->position.x + CAMERA_GRACE - SCREEN_WIDTH;
