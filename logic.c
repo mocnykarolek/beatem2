@@ -26,7 +26,7 @@ void comboHandler(Player*p, double delta){
         {
         case LEFT_DASH:
             p->position.x += LEFT * p->speed * 2 * delta;   
-            p->comboType.comboTimeRemaining -= delta;
+            
 
 
             break;
@@ -157,12 +157,12 @@ void handleJumping(GameState* gms, double delta){
 
 Combo InitCombo(char* comboChar){
     int Combotype;
-    if(strcmp(comboChar, "LEFT")) Combotype = LEFT_DASH;
-    else if(strcmp(comboChar, "RIGHT")) Combotype = RIGHT_DASH;
-    else if(strcmp(comboChar, "UP")) Combotype = UP_DASH;
-    else if(strcmp(comboChar, "DOWN")) Combotype = DOWN_DASH;
-    else if(strcmp(comboChar, "LIGHT")) Combotype = LIGHT_COMBO;
-    else if(strcmp(comboChar, "HEAVY")) Combotype = HEAVY_COMBO;
+    if(strcmp(comboChar, "LEFT") == 0) Combotype = LEFT_DASH;
+    else if(strcmp(comboChar, "RIGHT") == 0) Combotype = RIGHT_DASH;
+    else if(strcmp(comboChar, "UP")== 0) Combotype = UP_DASH;
+    else if(strcmp(comboChar, "DOWN")== 0) Combotype = DOWN_DASH;
+    else if(strcmp(comboChar, "LIGHT")== 0) Combotype = LIGHT_COMBO;
+    else if(strcmp(comboChar, "HEAVY")== 0) Combotype = HEAVY_COMBO;
     else Combotype = NO_COMBO;
     
     Combo current_combo;
@@ -170,7 +170,7 @@ Combo InitCombo(char* comboChar){
     {
     case LEFT_DASH:
         current_combo.comboType = LEFT_DASH;
-        current_combo.comboInitialTime = 1;
+        current_combo.comboInitialTime = 0.5f;
         current_combo.comboTimeRemaining = current_combo.comboInitialTime;
         break;
     case RIGHT_DASH:
@@ -263,8 +263,8 @@ void mainLoop(GameState *gms){
     }
     
     Player *player= malloc(sizeof(Player));
-    char t[20];
-    player->recentActions = malloc(4*sizeof(t));
+    
+    player->recentActions = malloc(4*sizeof(char*));
     
     gms->p = player;
     if(initialize_player(player, gameSession, (double)(WORLD_WIDTH /2), (double)(WORLD_HEIGHT /2))){
@@ -431,13 +431,15 @@ void mainLoop(GameState *gms){
         printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType, combo_delay);
         int test = checkCombo(player) != NOACTIONCHAR;
         printf("%d\n", test);
-        if(checkCombo(player) != NOACTIONCHAR && player->comboType.comboType == NO_COMBO){
+        if(strcmp(checkCombo(player), NOACTIONCHAR) != 0 && player->comboType.comboType == NO_COMBO){
             printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType, combo_delay);
             player->comboType = InitCombo(checkCombo(player));
             
         }
-        printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType, combo_delay);
-        break;
+        if(player->comboType.comboType != NO_COMBO) player->comboType.comboTimeRemaining -= delta;
+        else player->comboType.comboTimeRemaining =0;
+        printf("CURRENT COMBO: %d COMBOTIMER: %lf \n", player->comboType.comboType, player->comboType.comboTimeRemaining);
+        // break;
         
         comboHandler(player, delta);
         

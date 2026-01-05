@@ -16,7 +16,7 @@ const int WORLD_MIN_X = 0;
 //TODO: fix attack hitboxes
 
 
-int main(int argc, int** argv){
+int main(int argc, char** argv){
     
     
     GameState *gms = malloc(sizeof(GameState));
