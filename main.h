@@ -40,6 +40,7 @@ extern const int WORLD_MIN_X;
 #define COMBO_DELAY_S 2
 #define DASH_TIME 0.1
 
+
 #define NOACTION 0
 #define ACTION 1
 #define NOACTIONCHAR "..."
@@ -134,6 +135,8 @@ typedef enum{
     LIGHT_COMBO =5,
     HEAVY_COMBO = 6,
     NO_COMBO = 0,
+    SUPERCOMBO = 7,
+
 
 }ComboTypes;
 

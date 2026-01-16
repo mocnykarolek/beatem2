@@ -6,6 +6,6 @@
 
 void playerMovement(GameSession* gs, Player* p, double delta);
 void mainLoop(GameState *gms);
-
+SDL_Rect getAttackBox(Player *p, GameState *gms);
 
 void deallocation(GameState* gms);
