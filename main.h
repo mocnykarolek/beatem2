@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include <time.h>
 
 
 #define SCREEN_WIDTH 640
@@ -151,8 +152,8 @@ typedef struct Enemy{
 
 
 typedef struct {
-    SDL_Rect rect;;
-
+    SDL_Rect rect;
+    int health;
 } Entity;
 
 

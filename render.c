@@ -1,4 +1,5 @@
 #include "render.h"
+#include "logic.h"
 
 int color(GameSession *gameSession, Colors color) {
 
@@ -152,7 +153,88 @@ void changePlayersColor(Player *p, GameSession *gs, GameState *gms) {
         SDL_SetTextureColorMod(p->texture, 255, 255, 255);
     }
 }
+
 void PlayerAttackState(Player *p, GameSession *gs, GameState *gms) {
+
+    // if (p->actions.type == LIGHT_ATTACK) {
+    //     int colorP = color(gs, GREEN);
+    //     SDL_SetTextureColorMod(p->texture, 0, 255, 0);
+
+    //     if (p->lastHeading == RIGHT) {
+    //         double AttackScreenPosition =
+    //             p->position.x + p->rect.w + 30 - *gms->camera_offset;
+    //         double spaceAvailable = SCREEN_WIDTH - AttackScreenPosition;
+
+    //         //
+
+    //         if (spaceAvailable < PLAYER_LIGHT_REACH_px) {
+    //             DrawRectangle(gs->screen, AttackScreenPosition,
+    //                           p->position.y - (p->rect.h / 2),
+    //                           spaceAvailable, 30, colorP, colorP);
+    //         } else
+    //             DrawRectangle(gs->screen, AttackScreenPosition,
+    //                           p->position.y - (p->rect.h / 2),
+    //                           PLAYER_LIGHT_REACH_px, 30, colorP, colorP);
+
+    //     } else if (p->lastHeading == LEFT) {
+    //         double AttackScreenPosition =
+    //             p->position.x - PLAYER_LIGHT_REACH_px - *gms->camera_offset;
+    //         double spaceAvailable = p->position.x;
+
+    //         // *gms->debug_exit = 1;
+    //         if (AttackScreenPosition < 0) {
+    //             DrawRectangle(gs->screen, 0, p->position.y - (p->rect.h / 2),
+    //                           spaceAvailable, 30, colorP, colorP);
+    //             printf("%lf . %lf\n", AttackScreenPosition, spaceAvailable);
+    //         } else
+    //             DrawRectangle(gs->screen, AttackScreenPosition,
+    //                           p->position.y - (p->rect.h / 2),
+    //                           PLAYER_LIGHT_REACH_px, 30, colorP, colorP);
+    //     }
+
+    // } else if (p->actions.type == HEAVY_ATTACK) {
+    //     int colorP = color(gs, RED);
+    //     SDL_SetTextureColorMod(p->texture, 255, 0, 0);
+
+    //     if (p->lastHeading == RIGHT) {
+    //         double AttackScreenPosition =
+    //             p->position.x + p->rect.w + 30 - *gms->camera_offset;
+    //         double spaceAvailable = SCREEN_WIDTH - AttackScreenPosition;
+
+    //         //
+
+    //         if (spaceAvailable < PLAYER_HEAVY_REACH_px) {
+    //             DrawRectangle(gs->screen, AttackScreenPosition,
+    //                           p->position.y - (p->rect.h / 2),
+    //                           spaceAvailable, 30, colorP, colorP);
+    //         } else
+    //             DrawRectangle(gs->screen, AttackScreenPosition,
+    //                           p->position.y - (p->rect.h / 2),
+    //                           PLAYER_HEAVY_REACH_px, 30, colorP, colorP);
+
+    //     } else if (p->lastHeading == LEFT) {
+    //         double AttackScreenPosition =
+    //             p->position.x - PLAYER_HEAVY_REACH_px - *gms->camera_offset;
+    //         double spaceAvailable = p->position.x;
+
+    //         // *gms->debug_exit = 1;
+    //         if (AttackScreenPosition < 0) {
+    //             DrawRectangle(gs->screen, 0, p->position.y - (p->rect.h / 2),
+    //                           spaceAvailable, 30, colorP, colorP);
+    //             printf("%lf . %lf\n", AttackScreenPosition, spaceAvailable);
+    //         } else
+    //             DrawRectangle(gs->screen, AttackScreenPosition,
+    //                           p->position.y - (p->rect.h / 2),
+    //                           PLAYER_HEAVY_REACH_px, 30, colorP, colorP);
+    //     }
+
+    // }
+    // else if (p->comboType.comboType == SUPERCOMBO) {
+    //     SDL_SetTextureColorMod(p->texture, 0, 0, 255);
+    // } else if (p->actions.type == NOACTION || p->comboType.comboType ==
+    // NO_COMBO) {
+    //     SDL_SetTextureColorMod(p->texture, 255, 255, 255);
+    // }
 
     if (p->actions.type == LIGHT_ATTACK) {
         int colorP = color(gs, GREEN);
@@ -226,9 +308,43 @@ void PlayerAttackState(Player *p, GameSession *gs, GameState *gms) {
                               PLAYER_HEAVY_REACH_px, 30, colorP, colorP);
         }
 
-    } else if (p->actions.type == NOACTION) {
+    } else if (p->comboType.comboType == SUPERCOMBO) {
+        SDL_SetTextureColorMod(p->texture, 0, 0, 255);
+    } else if (p->actions.type == NOACTION ||
+               p->comboType.comboType == NO_COMBO) {
         SDL_SetTextureColorMod(p->texture, 255, 255, 255);
     }
+}
+
+void DrawPlayerAttack(Player *p, GameSession *gs, GameState *gms) {
+
+    SDL_Rect attackBox = getAttackBox(p);
+    int attackColor;
+
+    if (p->actions.type == LIGHT_ATTACK) {        //
+        attackColor = color(gs, GREEN);           
+        SDL_SetTextureColorMod(p->texture, 0, 255, 0);
+    } else if (p->actions.type == HEAVY_ATTACK) { //
+        attackColor = color(gs, RED);             //
+        SDL_SetTextureColorMod(p->texture, 255, 0, 0);
+
+    }else if (p->comboType.comboType == SUPERCOMBO) { // Zakładam, że dodałeś to do enum
+        // SZPONT FIX: Wcześniej nie ustawiałeś tu koloru pudełka!
+        attackColor = color(gs, BLUE); 
+        SDL_SetTextureColorMod(p->texture, 0, 0, 255);
+    } 
+    else {
+        // To obsługuje NOACTION i NO_COMBO
+        SDL_SetTextureColorMod(p->texture, 255, 255, 255); // Reset koloru gracza
+        
+        // Jeśli nie ma ataku, przerywamy funkcję, żeby nie rysować pustego prostokąta
+        return; 
+    }
+
+    // 4. Rysowanie z konwersją: World Space -> Screen Space
+    // Odejmujemy *gms->camera_offset TYLKO tutaj
+    DrawRectangle(gs->screen, attackBox.x - *gms->camera_offset, attackBox.y,
+                  attackBox.w, attackBox.h, attackColor, attackColor);
 }
 
 int loadCharset(GameSession *gameSession) {

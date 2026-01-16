@@ -66,7 +66,7 @@ void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
         case SUPERCOMBO:
             printf("dDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
                    "DDDDDDDDDDDDDD\n");
-            PlayerAttackState(p, gs, gms);
+            DrawPlayerAttack(p, gs, gms);
 
             break;
 
@@ -83,7 +83,7 @@ void lightAttack(Player *p, double delta, GameSession *gs, GameState *gms) {
 
     if (p->actions.RemainingTime_s > 0) {
 
-        PlayerAttackState(p, gs, gms);
+        DrawPlayerAttack(p, gs, gms);
 
         p->actions.RemainingTime_s -= delta;
     }
@@ -103,7 +103,7 @@ void HeavyAttack(Player *p, double delta, GameSession *gs, GameState *gms) {
 
     if (p->actions.RemainingTime_s > 0) {
 
-        PlayerAttackState(p, gs, gms);
+        DrawPlayerAttack(p, gs, gms);
 
         p->actions.RemainingTime_s -= delta;
     }
@@ -126,94 +126,43 @@ void actionsHandling(Player *p, double delta, GameSession *gs, GameState *gms) {
         p->isAction = ACTION;
         HeavyAttack(p, delta, gs, gms);
     } else if (p->actions.type == NOACTION)
-        PlayerAttackState(p, gs, gms);
+        DrawPlayerAttack(p, gs, gms);
 }
 
-SDL_Rect getAttackBox(Player *p, GameState *gms) {
-    SDL_Rect r;
+SDL_Rect
+getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
+    SDL_Rect r = {0, 0, 0, 0}; // 1. Inicjalizacja zerami (bezpiecznik)
 
-    if (p->actions.type != NOACTION) {
-        r.h = 30;
-        if (p->actions.type == LIGHT_ATTACK) {
-
-            if (p->lastHeading == RIGHT) {
-
-                double AttackScreenPosition =
-                    p->position.x + p->rect.w + 30 - *gms->camera_offset;
-                double spaceAvailable = SCREEN_WIDTH - AttackScreenPosition;
-                r.x = AttackScreenPosition;
-                //
-
-                if (spaceAvailable < PLAYER_LIGHT_REACH_px) {
-                    r.y = p->position.y - (p->rect.h / 2);
-                    r.w = spaceAvailable;
-
-                } else
-                    r.y = p->position.y - (p->rect.h / 2);
-                r.w = PLAYER_LIGHT_REACH_px;
-            }
-
-        } else if (p->lastHeading == LEFT) {
-            double AttackScreenPosition =
-                p->position.x - PLAYER_LIGHT_REACH_px - *gms->camera_offset;
-            double spaceAvailable = p->position.x;
-
-            // *gms->debug_exit = 1;
-            if (AttackScreenPosition < 0) {
-                r.x = 0;
-                r.y = p->position.y - (p->rect.h / 2);
-                r.w = spaceAvailable;
-
-            } else {
-                r.x = AttackScreenPosition;
-                r.y = p->position.y - (p->rect.h / 2);
-                r.w = PLAYER_LIGHT_REACH_px;
-            }
-        }
-
-    } else if (p->actions.type == HEAVY_ATTACK) {
-
-        if (p->lastHeading == RIGHT) {
-            double AttackScreenPosition =
-                p->position.x + p->rect.w + 30 - *gms->camera_offset;
-            double spaceAvailable = SCREEN_WIDTH - AttackScreenPosition;
-
-            //
-            r.x = AttackScreenPosition;
-
-            if (spaceAvailable < PLAYER_HEAVY_REACH_px) {
-
-                r.y = p->position.y - (p->rect.h / 2);
-                r.w = spaceAvailable;
-            } else {
-                r.y = p->position.y - (p->rect.h / 2);
-                r.w = PLAYER_HEAVY_REACH_px;
-            }
-
-        } else if (p->lastHeading == LEFT) {
-            double AttackScreenPosition =
-                p->position.x - PLAYER_HEAVY_REACH_px - *gms->camera_offset;
-            double spaceAvailable = p->position.x;
-
-            // *gms->debug_exit = 1;
-            if (AttackScreenPosition < 0) {
-                r.x = 0;
-                r.y = p->position.y - (p->rect.h / 2);
-                r.w = spaceAvailable;
-
-            }
-            else{
-
-                r.x = AttackScreenPosition;
-                r.y = p->position.y - (p->rect.h / 2);
-                r.w = PLAYER_HEAVY_REACH_px;
-            }
-
-        }
+    // Jeśli nie ma ataku, zwracamy pusty prostokąt
+    if (p->actions.type != LIGHT_ATTACK && p->actions.type != HEAVY_ATTACK) {
+        return r;
     }
 
-    if (p->comboType.comboType != NO_COMBO) {
-        
+    int reach = 0;
+    int offset_x = 30; // Odstęp od krawędzi gracza
+
+    // 2. Ustalenie parametrów zależnie od ataku (DRY)
+    if (p->actions.type == LIGHT_ATTACK) {
+        reach = PLAYER_LIGHT_REACH_px;
+    } else {
+        reach = PLAYER_HEAVY_REACH_px;
+    }
+
+    r.h = 30; // Wysokość hitboxa
+    r.y =
+        (int)p->position.y - (p->rect.h / 2); // Wysokość: np. w połowie postaci
+
+    // 3. Obliczenia w WORLD SPACE (bez kamery!)
+    if (p->lastHeading == RIGHT) {
+        // Atak w prawo: pozycja gracza + szerokość gracza + odstęp
+        r.x = (int)p->position.x + p->rect.w + offset_x;
+        r.w = reach;
+    } else { // LEFT
+        // Atak w lewo: pozycja gracza - zasięg
+        r.x = (int)p->position.x - reach;
+        // Tutaj opcjonalnie mały fix, jeśli chcesz by atak wychodził idealnie z
+        // pleców czy przodu Ale generalnie:
+        r.w = reach;
     }
 
     return r;
@@ -235,6 +184,87 @@ void restartGame(GameState *gms, GameSession *g) {
     }
     *gms->worldTime = 0;
     *gms->camera_offset = 0;
+}
+
+Entity *createEntities(int numOfEntities) {
+
+    Entity *entities = malloc(numOfEntities * sizeof(Entity));
+    for (int i = 0; i < numOfEntities; i++) {
+        entities[i].rect.w = 30;
+        entities[i].rect.h = 30;
+        entities[i].isInitialized = false;
+    }
+
+    return entities;
+}
+
+int checkCollision(SDL_Rect rect1, SDL_Rect rect2) {
+
+    if (rect1.x >= rect2.x + rect2.w) {
+        return 0;
+    }
+    if (rect1.x + rect1.w <= rect2.x) {
+        return 0;
+    }
+    if (rect1.y >= rect2.y + rect2.h) {
+        return 0;
+    }
+    if (rect1.y + rect1.h <= rect2.y) {
+        return 0;
+    }
+
+    return 1;
+}
+
+void EntitiesRandomPosition(Entity *entities, int entityCount) {
+
+    for (int i = 0; i < entityCount; i++) {
+        
+        int collisionDetected;
+        int rand_x;
+        int rand_y;
+        int attemps = 0;
+        SDL_Rect testRect = entities[i].rect;
+        do {
+            collisionDetected = 0;
+            int min_x = WORLD_MIN_X;
+            int max_x = WORLD_MAX_X - testRect.w;
+            int min_y = WORLD_MIN_Y;
+            int max_y = WORLD_MAX_Y - testRect.h;
+
+
+            testRect.x = min_x + rand() % (max_x - min_x +1);
+            testRect.y = min_y + rand() % (max_y - min_y +1);
+
+
+            
+            
+
+            for (int j = 0; j < i; j++) {
+                if(checkCollision(testRect, entities[j].rect)){
+                    collisionDetected = 1;
+                    break;
+                }
+            }
+
+            
+
+
+            attemps++;
+
+            if(attemps > MAX_ATTEMPTS){
+                break;
+            }
+
+
+        } while (collisionDetected);
+
+        entities[i].rect.x = rand_x;
+        entities[i].rect.y = rand_y;
+        entities[i].isInitialized = true;
+
+
+    }
 }
 
 void handleJumping(GameState *gms, double delta) {

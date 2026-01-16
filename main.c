@@ -18,7 +18,7 @@ const int WORLD_MIN_X = 0;
 
 int main(int argc, char** argv){
     
-    
+    srand(time(NULL));
     GameState *gms = malloc(sizeof(GameState));
     int exit = 0;
     gms->debug_exit = &exit;
