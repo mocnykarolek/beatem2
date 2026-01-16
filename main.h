@@ -40,7 +40,9 @@ extern const int WORLD_MIN_X;
 #define PLAYER_HEAVY_REACH_px 200
 #define COMBO_DELAY_S 2
 #define DASH_TIME 0.1
+#define MAX_ATTEMPTS 1000
 
+#define NUMOFOBSTACLES 10
 
 #define NOACTION 0
 #define ACTION 1
@@ -154,6 +156,7 @@ typedef struct Enemy{
 typedef struct {
     SDL_Rect rect;
     int health;
+    int isInitialized;
 } Entity;
 
 
@@ -180,7 +183,7 @@ typedef struct GameState{
     double *worldTime;
     int *camera_offset;
     GameSession *gs;
-
+    Entity *entites;
     int *debug_exit;
 
 

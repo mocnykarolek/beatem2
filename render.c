@@ -362,6 +362,26 @@ int loadCharset(GameSession *gameSession) {
     return 0;
 }
 
+
+void RenderEntities(Entity* entities, int numOfEntites, GameSession* gs, int cameraOffset){
+
+    
+    for (int  i = 0; i < numOfEntites; i++)
+    {
+        Entity entity = entities[i];
+        // printf("fsdfsd\n");
+        if(entity.isInitialized){
+            DrawRectangle(gs->screen, entity.rect.x - cameraOffset, entity.rect.y, entity.rect.w, entity.rect.h, color(gs, RED ), color(gs, RED) );
+                
+        }
+    }
+    
+    
+
+
+}
+
+
 int initialization(GameSession *gameSession) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         return 0;

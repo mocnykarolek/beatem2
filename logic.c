@@ -221,8 +221,7 @@ void EntitiesRandomPosition(Entity *entities, int entityCount) {
     for (int i = 0; i < entityCount; i++) {
         
         int collisionDetected;
-        int rand_x;
-        int rand_y;
+
         int attemps = 0;
         SDL_Rect testRect = entities[i].rect;
         do {
@@ -259,8 +258,8 @@ void EntitiesRandomPosition(Entity *entities, int entityCount) {
 
         } while (collisionDetected);
 
-        entities[i].rect.x = rand_x;
-        entities[i].rect.y = rand_y;
+        entities[i].rect.x = testRect.x;
+        entities[i].rect.y = testRect.y;
         entities[i].isInitialized = true;
 
 
@@ -407,6 +406,11 @@ void mainLoop(GameState *gms) {
         return;
     }
     SDL_Rect sky_rect = {0, 0, SCREEN_WIDTH, SCREEN_WIDTH / 4};
+    Entity *entities = createEntities(NUMOFOBSTACLES);
+    gms->entites = entities;
+    EntitiesRandomPosition(entities, NUMOFOBSTACLES);
+
+
 
     int camera_offset = 0;
     gms->camera_offset = &camera_offset;
@@ -622,13 +626,18 @@ void mainLoop(GameState *gms) {
                       player->position.y + player->rect.h, 4, 4,
                       color(gameSession, RED), color(gameSession, BLUE));
 
+        
         SDL_RenderCopy(gameSession->renderer, gameSession->scrtex, NULL, NULL);
 
         // SDL_RenderCopy(gamestate->renderer, player->texture, NULL,
         // &player->rect);
+
+        
         SDL_UpdateTexture(gameSession->scrtex, NULL,
                           gameSession->screen->pixels,
                           gameSession->screen->pitch);
+
+        RenderEntities(entities, NUMOFOBSTACLES, gameSession, camera_offset);
         DrawTexture(gameSession->renderer, player->texture,
                     (int)player->position.x -
                         camera_offset, // X z uwzględnieniem kamery
@@ -638,6 +647,7 @@ void mainLoop(GameState *gms) {
                     player->rect.h,     // Wysokość (100) - bezpieczna z rect
                     player->scale,      // Twoja skala
                     0, flip);
+        
         SDL_RenderPresent(gameSession->renderer);
 
         frames++;
@@ -653,6 +663,7 @@ void deallocation(GameState *gms) {
     SDL_DestroyRenderer(gms->gs->renderer);
     SDL_DestroyWindow(gms->gs->window);
     free(gms->p);
+    free(gms->entites);
 
     SDL_Quit();
 }
