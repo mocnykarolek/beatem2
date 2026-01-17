@@ -179,6 +179,23 @@ SDL_Rect getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna zna�
     return r;
 }
 
+
+void checkAttack(Player* p, Entity* e, GameState* gms){
+
+    for (int i = 0; i < NUMOFOBSTACLES; i++)
+    {
+        if(checkCollision(e[i].rect, getAttackBox(p))){
+            gms->players_points ++;
+        }
+    }
+    
+
+
+}
+
+
+
+
 SDL_Rect playerObstaclesHitbox(Player *p, int obsH) {
     SDL_Rect playerHitbox;
     playerHitbox.x = p->rect.x;
@@ -429,6 +446,8 @@ void mainLoop(GameState *gms) {
     int camera_offset = 0;
     gms->camera_offset = &camera_offset;
 
+    int playerPoints = 0;
+    gms->players_points = &playerPoints;
     int sky_color = color(gameSession, SKYBLUE);
     int background_color = color(gameSession, TITLEGRAY);
     int flip = SDL_FLIP_NONE;
@@ -640,7 +659,11 @@ void mainLoop(GameState *gms) {
         DrawRectangle(gameSession->screen, 4, 4, 100, 36,
                       color(gameSession, BLACK), color(gameSession, RED));
         sprintf(text, "HEALTH: %d ", player->remainingHp);
+
         DrawString(gameSession->screen, 6, 20, text, gameSession->charset);
+        
+        
+
         // fffffffffffffffffffffffff
         RenderEntities(entities, NUMOFOBSTACLES, gameSession, camera_offset);
         DrawPlayerObstacleHitbox(player, 30, gms);
@@ -649,7 +672,10 @@ void mainLoop(GameState *gms) {
                       color(gameSession, RED), color(gameSession, BLUE));
         
         SDL_RenderCopy(gameSession->renderer, gameSession->scrtex, NULL, NULL);
-
+        sprintf(text2, "[ %d POINTS  ]", *gms->players_points);
+        DrawString(gameSession->screen,
+                   gameSession->screen->w - strlen(text2) * 8, SCREEN_HEIGHT - 30,
+                   text2, gameSession->charset);
         // SDL_RenderCopy(gamestate->renderer, player->texture, NULL,
         // &player->rect);
         

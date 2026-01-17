@@ -164,6 +164,7 @@ typedef struct GameState {
     GameSession *gs;
     Entity *entites;
     int *debug_exit;
+    int *players_points;
 
 } GameState;
 
