@@ -120,6 +120,18 @@ typedef struct Player {
 
     Combo comboType;
 
+    int frameWidth;
+    int frameHeight;
+
+    int currentFrame;
+    int currentRow;
+
+    double animTimer;
+    double timePerFrame;
+    int totalFrames;
+
+
+
 } Player;
 
 typedef enum {

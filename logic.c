@@ -88,6 +88,42 @@ void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
     }
 }
 
+
+void UpdatePlayerAnimation(Player *p, double delta) {
+    
+    // 1. Wybór rzędu (Jaka to czynność?)
+    if (p->actions.type == LIGHT_ATTACK || p->actions.type == HEAVY_ATTACK) {
+        p->currentRow = 2; // Rząd 3 (index 2) w twoim pliku to atak
+        // Opcjonalnie: przyspiesz animację ataku
+        p->timePerFrame = 0.1; 
+    } 
+    else if (p->direction.x != 0 || p->direction.y != 0) {
+        p->currentRow = 1; // Rząd 2 (index 1) to chodzenie
+        p->timePerFrame = 0.15;
+    } 
+    else {
+        p->currentRow = 0; // Rząd 1 (index 0) to stanie (idle)
+        p->timePerFrame = 0.2; // Wolniejsze "oddychanie"
+    }
+
+    // 2. Odliczanie czasu
+    p->animTimer += delta;
+
+    // 3. Zmiana klatki
+    if (p->animTimer >= p->timePerFrame) {
+        p->animTimer = 0;
+        p->currentFrame++;
+
+        // Zapętlanie (1, 2, 3, 4 -> 1...)
+        if (p->currentFrame >= p->totalFrames) {
+            p->currentFrame = 0;
+            
+            // Fix dla ataku: Jeśli atak się skończył, można tu wyłączyć isAction
+            // ale na razie zostawmy proste pętlę.
+        }
+    }
+}
+
 void lightAttack(Player *p, double delta, GameSession *gs, GameState *gms) {
     if (p->actions.RemainingTime_s == 0) {
         p->actions.RemainingTime_s = PLAYERS_LIGHT_ACTION_DURATION_S;
@@ -186,6 +222,7 @@ void checkAttack(Player* p, Entity* e, GameState* gms){
     {
         if(checkCollision(e[i].rect, getAttackBox(p))){
             gms->players_points ++;
+            return;
         }
     }
     
@@ -591,7 +628,9 @@ void mainLoop(GameState *gms) {
                player->rect.x, player->rect.y, player->scale, camera_offset);
         playerMovement(gameSession, player, delta);
         handleJumping(gms, delta);
+        checkAttack(player, entities, gms);
         actionsHandling(player, delta, gameSession, gms);
+        UpdatePlayerAnimation(player, delta);
         printf("checkCombo: %s\n", checkCombo(player));
         printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType,
                combo_delay);
@@ -683,15 +722,16 @@ void mainLoop(GameState *gms) {
                           gameSession->screen->pixels,
                           gameSession->screen->pitch);
 
-        DrawTexture(gameSession->renderer, player->texture,
-                    (int)player->position.x -
-                        camera_offset, // X z uwzględnieniem kamery
-                    (int)player->position.y +
-                        player->rect.h, // Y STÓP (Głowa + Wysokość)
-                    player->rect.w,     // Szerokość (100) - bezpieczna z rect
-                    player->rect.h,     // Wysokość (100) - bezpieczna z rect
-                    player->scale,      // Twoja skala
-                    0, flip);
+        // DrawTexture(gameSession->renderer, player->texture,
+        //             (int)player->position.x -
+        //                 camera_offset, // X z uwzględnieniem kamery
+        //             (int)player->position.y +
+        //                 player->rect.h, // Y STÓP (Głowa + Wysokość)
+        //             player->rect.w,     // Szerokość (100) - bezpieczna z rect
+        //             player->rect.h,     // Wysokość (100) - bezpieczna z rect
+        //             player->scale,      // Twoja skala
+        //             0, flip);
+        DrawPlayerAnimation(gameSession, player, *gms->camera_offset);
 
         SDL_RenderPresent(gameSession->renderer);
 

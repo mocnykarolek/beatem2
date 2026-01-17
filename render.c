@@ -30,7 +30,7 @@ int color(GameSession *gameSession, Colors color) {
 int initialize_player(Player *player, GameSession *gameSession, double x,
                       double y) {
 
-    player->surface = SDL_LoadBMP("./textures/stickman3.bmp");
+    player->surface = SDL_LoadBMP("./textures/framesCleaned.bmp");
     if (player->surface == NULL) {
         printf("SDL_LoadBMP(stickman.bmp) error: %s\n", SDL_GetError());
         SDL_FreeSurface(gameSession->screen);
@@ -41,6 +41,10 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
         SDL_Quit();
         return 1;
     }
+
+    SDL_SetColorKey(player->surface, SDL_TRUE, 
+                    SDL_MapRGB(player->surface->format, 255, 0, 255));
+
     player->texture =
         SDL_CreateTextureFromSurface(gameSession->renderer, player->surface);
     if (player->texture == NULL) {
@@ -54,13 +58,24 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
         return 1;
     }
     player->speed = PLAYER_SPEED;
+    player->frameHeight = 50;
+    player->frameWidth = 21;
+
 
     player->rect.x = x;
     player->rect.y = y;
-    player->rect.w = player->surface->w;
-    player->rect.h = player->surface->h;
+    player->rect.w = player->frameWidth;
+    player->rect.h = player->frameHeight;
     player->position.x = x;
     player->position.y = y + player->rect.h;
+
+    player->currentFrame = 0;
+    player->currentRow = 0;
+    player->animTimer = 0;
+    player->timePerFrame = 0.15; // Prędkość zmian (im mniej, tym szybciej)
+    player->totalFrames = 4;
+
+
     // player->rect.w = 100;
     // player->rect.h = 100;
     player->remainingHp = PLAYER_MAX_HEALTH;
@@ -153,6 +168,37 @@ void changePlayersColor(Player *p, GameSession *gs, GameState *gms) {
                p->comboType.comboType == NO_COMBO) {
         SDL_SetTextureColorMod(p->texture, 255, 255, 255);
     }
+}
+
+
+void DrawPlayerAnimation(GameSession *gs, Player *p, int cameraOffset) {
+    
+    SDL_Rect srcRect;  // Co wycinamy z obrazka
+    SDL_Rect destRect; // Gdzie rysujemy na ekranie
+
+    // --- MATEMATYKA SPRITESHEETA ---
+    srcRect.x = p->currentFrame * p->frameWidth; // Przesunięcie w prawo
+    srcRect.y = p->currentRow * p->frameHeight;  // Przesunięcie w dół
+    srcRect.w = p->frameWidth;
+    srcRect.h = p->frameHeight;
+
+    // Pozycja na ekranie (z uwzględnieniem kamery i skali)
+    destRect.x = (int)p->position.x - cameraOffset;
+    destRect.y = (int)p->position.y - (p->rect.h * p->scale) + p->rect.h; // Korekta na stopy
+    destRect.w = p->frameWidth * p->scale;
+    destRect.h = p->frameHeight * p->scale;
+
+    // Obsługa obracania (lewo/prawo)
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+    if (p->lastHeading == LEFT) {
+        flip = SDL_FLIP_HORIZONTAL;
+    }
+
+    // Rysujemy wycinek!
+    SDL_RenderCopyEx(gs->renderer, p->texture, 
+                     &srcRect,   // <-- Kluczowa zmiana: nie NULL, a srcRect
+                     &destRect, 
+                     0, NULL, flip);
 }
 
 void PlayerAttackState(Player *p, GameSession *gs, GameState *gms) {

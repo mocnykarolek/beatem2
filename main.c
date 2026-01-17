@@ -89,6 +89,11 @@ void DrawTexture(SDL_Renderer *renderer, SDL_Texture *texture, int x, int y,
 // rysowanie pojedynczego pixela
 // draw a single pixel
 void DrawPixel(SDL_Surface *surface, int x, int y, Uint32 color) {
+    if (x < 0 || x >= surface->w || y < 0 || y >= surface->h) {
+        return;
+    }
+
+
     int bpp = surface->format->BytesPerPixel;
     Uint8 *p = (Uint8 *)surface->pixels + y * surface->pitch + x * bpp;
     *(Uint32 *)p = color;
