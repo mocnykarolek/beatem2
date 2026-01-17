@@ -4,18 +4,15 @@
 #include "SDL2-2.0.10/include/SDL_keycode.h"
 #include "SDL2-2.0.10/include/SDL_rect.h"
 
-
 #include "./SDL2-2.0.10/include/SDL.h"
 #include "SDL2-2.0.10/include/SDL_render.h"
 #include "SDL2-2.0.10/include/SDL_surface.h"
 #include "SDL2-2.0.10/include/SDL_video.h"
+#include <math.h>
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdio.h>
 #include <string.h>
-#include <math.h>
 #include <time.h>
-
 
 #define SCREEN_WIDTH 640
 #define SCREEN_HEIGHT 480
@@ -27,12 +24,12 @@ extern const int WORLD_MIN_Y;
 extern const int WORLD_MAX_X;
 extern const int WORLD_MIN_X;
 #define CAMERA_GRACE 100
-#define PLAYER_LEFT  -1
+#define PLAYER_LEFT -1
 #define PLAYER_RIGHT 1
 #define PLAYER_UP -1
 #define PLAYER_DOWN 1
 #define PLAYER_SPEED 300
-#define RESET_ACTION  0
+#define RESET_ACTION 0
 #define PLAYER_JUMP_TIME 0.5
 #define PLAYERS_LIGHT_ACTION_DURATION_S 0.2
 #define PLAYERS_HEAVY_ACTION_DURATION_S 0.7
@@ -41,6 +38,7 @@ extern const int WORLD_MIN_X;
 #define COMBO_DELAY_S 2
 #define DASH_TIME 0.1
 #define MAX_ATTEMPTS 1000
+#define PLAYER_MAX_HEALTH 100
 
 #define NUMOFOBSTACLES 10
 
@@ -48,22 +46,18 @@ extern const int WORLD_MIN_X;
 #define ACTION 1
 #define NOACTIONCHAR "..."
 
-
 typedef enum {
     LEFT = -1,
     RIGHT = 1,
     UP = -1,
     DOWN = 1,
     JUMP = 1,
-    LIGHT_ATTACK =1,
+    LIGHT_ATTACK = 1,
     HEAVY_ATTACK = -1,
 
-}Action;
+} Action;
 
-
-
-
-typedef enum Colors{
+typedef enum Colors {
     RED,
     BLACK,
     GREEN,
@@ -71,14 +65,14 @@ typedef enum Colors{
     SKYBLUE,
     TITLEGRAY,
 
-}Colors;
+} Colors;
 
-typedef struct  {
+typedef struct {
     int type;
     double Time_s;
     double RemainingTime_s;
 
-}Player_actions;
+} Player_actions;
 
 typedef struct Position {
     float x;
@@ -90,29 +84,28 @@ typedef struct Direction {
     char y;
 } Direction;
 
-typedef struct PlayerColor{
+typedef struct PlayerColor {
 
     int lighAttack;
     int heavyAttack;
 
+} PlayerColor;
 
-}PlayerColor;
-
-typedef struct{
+typedef struct {
 
     int comboType;
     double comboTimeRemaining;
     double comboInitialTime;
 
-}Combo;
+} Combo;
 
-
-typedef struct Player{
+typedef struct Player {
     SDL_Rect rect;
     int speed;
+    int remainingHp;
     Direction direction;
-    SDL_Surface* surface;
-    SDL_Texture* texture;
+    SDL_Surface *surface;
+    SDL_Texture *texture;
     float scale;
     Position position;
     char **recentActions;
@@ -124,34 +117,28 @@ typedef struct Player{
     PlayerColor color;
     int lastHeading;
     SDL_Rect *attackHitbox;
-    
-    Combo comboType;
 
+    Combo comboType;
 
 } Player;
 
-typedef enum{
+typedef enum {
     LEFT_DASH = 1,
     RIGHT_DASH = 2,
     UP_DASH = 3,
     DOWN_DASH = 4,
-    LIGHT_COMBO =5,
+    LIGHT_COMBO = 5,
     HEAVY_COMBO = 6,
     NO_COMBO = 0,
     SUPERCOMBO = 7,
 
+} ComboTypes;
 
-}ComboTypes;
-
-
-typedef struct Enemy{
+typedef struct Enemy {
     int Remaininghealth;
     int Damage;
 
-
-
-}Enemy;
-
+} Enemy;
 
 typedef struct {
     SDL_Rect rect;
@@ -159,14 +146,7 @@ typedef struct {
     int isInitialized;
 } Entity;
 
-
-
-
-
-
-typedef struct GameSession{
-    
-
+typedef struct GameSession {
 
     SDL_Event event;
 
@@ -175,23 +155,19 @@ typedef struct GameSession{
     SDL_Window *window;
     SDL_Renderer *renderer;
 
-}GameSession;
+} GameSession;
 
-
-typedef struct GameState{
-    Player* p;
+typedef struct GameState {
+    Player *p;
     double *worldTime;
     int *camera_offset;
     GameSession *gs;
     Entity *entites;
     int *debug_exit;
 
-
-}GameState;
-
+} GameState;
 
 #ifndef UTIL
-
 
 // draw a text txt on surface screen, starting from the point (x, y)
 // charset is a 128x128 bitmap containing character images
@@ -225,8 +201,7 @@ void DrawLine(SDL_Surface *screen, int x, int y, int l, int dx, int dy,
 void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
                    Uint32 outlineColor, Uint32 fillColor);
 
-
-
-
+void DrawFrame(SDL_Surface *screen, int x, int y, int l, int k,
+               Uint32 outlineColor);
 
 #endif // !UTIL

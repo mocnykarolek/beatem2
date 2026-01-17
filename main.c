@@ -14,7 +14,7 @@ const int WORLD_MIN_Y = BACKGROUND_HEIGHT;
 const int WORLD_MAX_X = 1000;
 const int WORLD_MIN_X = 0;
 //TODO: fix attack hitboxes
-
+//TODO: update player w and h by scale and refresh values with new one every loop iteration
 
 int main(int argc, char** argv){
     
@@ -116,6 +116,23 @@ void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
     DrawLine(screen, x + l - 1, y, k, 0, 1, outlineColor);
     DrawLine(screen, x, y, l, 1, 0, outlineColor);
     DrawLine(screen, x, y + k - 1, l, 1, 0, outlineColor);
+    
     for (i = y + 1; i < y + k - 1; i++)
         DrawLine(screen, x + 1, i, l - 2, 1, 0, fillColor);
 };
+
+
+/*
+f
+sdfsfdsd
+*/
+void DrawFrame(SDL_Surface *screen, int x, int y, int l, int k,
+                   Uint32 outlineColor) {
+    
+    DrawLine(screen, x, y, k, 0, 1, outlineColor);
+    DrawLine(screen, x + l - 1, y, k, 0, 1, outlineColor);
+    DrawLine(screen, x, y, l, 1, 0, outlineColor);
+    DrawLine(screen, x, y + k - 1, l, 1, 0, outlineColor);
+
+
+}

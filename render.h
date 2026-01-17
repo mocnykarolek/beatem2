@@ -10,3 +10,4 @@ int initialization(GameSession* gameSession);
 void PlayerAttackState(Player*p, GameSession *gs, GameState *gms);
 void RenderEntities(Entity* entities, int numOfEntites, GameSession* gs, int cameraOffset);
 void DrawPlayerAttack(Player *p, GameSession *gs, GameState *gms);
+void DrawPlayerObstacleHitbox(Player *p, int obsH, GameState* gms);

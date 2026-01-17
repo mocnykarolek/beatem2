@@ -63,13 +63,14 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
     player->position.y = y + player->rect.h;
     // player->rect.w = 100;
     // player->rect.h = 100;
+    player->remainingHp = PLAYER_MAX_HEALTH;
 
     player->direction.x = 0;
     player->direction.y = 0;
     player->isJumping = RESET_ACTION;
     player->jumpingTime_s = PLAYER_JUMP_TIME;
     player->RemainingJumpTime_s = player->jumpingTime_s;
-
+    
     player->isAction = RESET_ACTION;
     player->actions.type = NOACTION;
     player->actions.RemainingTime_s = 0;
@@ -362,16 +363,30 @@ int loadCharset(GameSession *gameSession) {
     return 0;
 }
 
+void DrawPlayerObstacleHitbox(Player *p, int obsH, GameState* gms){
+
+    SDL_Rect HitboxRect = playerObstaclesHitbox(p, obsH);
+    printf("%d %d %d %d\n", HitboxRect.x, HitboxRect.y, HitboxRect.w, HitboxRect.h );
+    
+    DrawFrame(gms->gs->screen,  HitboxRect.x - *gms->camera_offset,
+                      HitboxRect.y, HitboxRect.h, HitboxRect.w,
+                      color(gms->gs, BLACK));
+
+
+}
+
 
 void RenderEntities(Entity* entities, int numOfEntites, GameSession* gs, int cameraOffset){
 
     
     for (int  i = 0; i < numOfEntites; i++)
     {
-        Entity entity = entities[i];
+        Entity *e = &entities[i];
+        // printf("cords X: %d Y: %d \n", e->rect.x, e->rect.y);
         // printf("fsdfsd\n");
-        if(entity.isInitialized){
-            DrawRectangle(gs->screen, entity.rect.x - cameraOffset, entity.rect.y, entity.rect.w, entity.rect.h, color(gs, RED ), color(gs, RED) );
+        if(e->isInitialized){
+            int scrX = e->rect.x - cameraOffset;
+            DrawRectangle(gs->screen, scrX, e->rect.y, e->rect.w, e->rect.h, color(gs, BLACK ), color(gs, RED) );
                 
         }
     }
