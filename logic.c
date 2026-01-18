@@ -279,7 +279,7 @@ Entity *createEntities(int numOfEntities, GameSession* gameSession) {
         entities[i].isInitialized = false;
         entities[i].health = 100;
 
-        entities[i].surface = SDL_LoadBMP("./textures/entity.bmp");
+        entities[i].surface = SDL_LoadBMP("./textures/entityClear.bmp");
         if (entities[i].surface == NULL) {
 
             SDL_Quit();
@@ -303,8 +303,8 @@ Entity *createEntities(int numOfEntities, GameSession* gameSession) {
         entities[i].totalFrames = 4;    // Ile klatek ma wróg?
         entities[i].isAttacked = 0;
 
-        entities[i].frameHeight = 31;
-        entities[i].frameWidth = 31;
+        entities[i].frameHeight = 30;
+        entities[i].frameWidth = 30;
     }
 
     return entities;
@@ -739,13 +739,16 @@ void mainLoop(GameState *gms) {
 
         // fffffffffffffffffffffffff
         // RenderEntities(entities, NUMOFOBSTACLES, gameSession, camera_offset);
-        DrawEntityAnimation(gameSession, entities, camera_offset);
+        
         DrawPlayerObstacleHitbox(player, 30, gms);
         DrawRectangle(gameSession->screen, player->position.x - camera_offset,
                       player->position.y + player->rect.h, 4, 4,
                       color(gameSession, RED), color(gameSession, BLUE));
 
         SDL_RenderCopy(gameSession->renderer, gameSession->scrtex, NULL, NULL);
+
+        DrawEntityAnimation(gameSession, entities, camera_offset);
+
         sprintf(text2, "[ %d POINTS  ]", *gms->players_points);
         DrawString(gameSession->screen,
                    gameSession->screen->w - strlen(text2) * 8,
