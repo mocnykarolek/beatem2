@@ -59,6 +59,33 @@ void DrawString(SDL_Surface *screen, int x, int y, const char *text,
 };
 
 
+void DrawStringS(SDL_Surface *screen, int x, int y, const char *text,
+                SDL_Surface *charset, double scale) {
+    int px, py, c;
+    SDL_Rect s, d;
+    s.w = 8;
+    s.h = 8;
+    d.w = (int)(8* scale);
+    d.h = (int)(8* scale);
+
+    while (*text) {
+        c = *text & 255;
+        px = (c % 16) * 8;
+        py = (c / 16) * 8;
+        s.x = px;
+        s.y = py;
+        d.x = x;
+        d.y = y;
+        SDL_BlitScaled(charset, &s, screen, &d);
+        x += (int)(8*scale);
+        text++;
+    };
+
+
+
+
+};
+
 // narysowanie na ekranie screen powierzchni sprite w punkcie (x, y)
 // (x, y) to punkt rodka obrazka sprite na ekranie
 // draw a surface sprite on a surface screen in point (x, y)

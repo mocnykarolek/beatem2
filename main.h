@@ -249,5 +249,7 @@ void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
 
 void DrawFrame(SDL_Surface *screen, int x, int y, int l, int k,
                Uint32 outlineColor);
+void DrawStringS(SDL_Surface *screen, int x, int y, const char *text,
+                SDL_Surface *charset, double scale);
 
 #endif // !UTIL

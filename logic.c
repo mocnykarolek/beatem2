@@ -109,6 +109,8 @@ void checkPlayerHit(Player *p, Entity *e) {
             if (p->remainingHp < 0)
                 p->remainingHp = 0;
 
+            p->multiplier =1;
+
             p->isHurt = 1;
             p->hurtTimer = 0.5;
 
@@ -156,28 +158,29 @@ void UpdateEntityAnimation(Entity *e, double delta) {
 void UpdatePlayerAnimation(Player *p, double delta) {
 
     if (p->isHurt) {
-        p->currentRow =3;
+        p->currentRow = 3;
         p->hurtTimer -= delta;
         if (p->hurtTimer <= 0) {
             p->isHurt = 0;
             p->currentRow = 0;
         }
-        
+
     }
 
-    else{
-    // 1. Wybór rzędu (Jaka to czynność?)
-    if (p->actions.type == LIGHT_ATTACK || p->actions.type == HEAVY_ATTACK) {
-        p->currentRow = 2; // Rząd 3 (index 2) w twoim pliku to atak
-        // Opcjonalnie: przyspiesz animację ataku
-        p->timePerFrame = 0.1;
-    } else if (p->direction.x != 0 || p->direction.y != 0) {
-        p->currentRow = 1; // Rząd 2 (index 1) to chodzenie
-        p->timePerFrame = 0.15;
-    } else {
-        p->currentRow = 0;     // Rząd 1 (index 0) to stanie (idle)
-        p->timePerFrame = 0.2; // Wolniejsze "oddychanie"
-    }
+    else {
+        // 1. Wybór rzędu (Jaka to czynność?)
+        if (p->actions.type == LIGHT_ATTACK ||
+            p->actions.type == HEAVY_ATTACK) {
+            p->currentRow = 2; // Rząd 3 (index 2) w twoim pliku to atak
+            // Opcjonalnie: przyspiesz animację ataku
+            p->timePerFrame = 0.1;
+        } else if (p->direction.x != 0 || p->direction.y != 0) {
+            p->currentRow = 1; // Rząd 2 (index 1) to chodzenie
+            p->timePerFrame = 0.15;
+        } else {
+            p->currentRow = 0;     // Rząd 1 (index 0) to stanie (idle)
+            p->timePerFrame = 0.2; // Wolniejsze "oddychanie"
+        }
     }
     // 2. Odliczanie czasu
     p->animTimer += delta;
@@ -195,7 +198,6 @@ void UpdatePlayerAnimation(Player *p, double delta) {
             // isAction ale na razie zostawmy proste pętlę.
         }
     }
-
 }
 
 void lightAttack(Player *p, double delta, GameSession *gs, GameState *gms) {
@@ -308,16 +310,17 @@ void checkAttack(Player *p, Entity *e, GameState *gms) {
     for (int i = 0; i < NUMOFOBSTACLES; i++) {
         if (checkCollision(e[i].rect, getAttackBox(p))) {
 
-            if(p->lastHitTime <= p->max_time_between_hits_s){
-                p->multiplier *=2;
-            }else{
-                p->multiplier = 1;
-            }
-
             if (e[i].isAttacked == 0) {
-                (*gms->players_points)+= p->multiplier;
-                p->lastHitTime =0;
-                
+
+                if (p->lastHitTime <= p->max_time_between_hits_s) {
+                    p->multiplier *= 2;
+                } else {
+                    p->multiplier = 1;
+                }
+
+                (*gms->players_points) += p->multiplier;
+                p->lastHitTime = 0;
+
                 e[i].isAttacked = 1;
                 e[i].currentFrame = 0;
                 e[i].animTimer = 0;
@@ -370,7 +373,7 @@ Entity *createEntities(int numOfEntities, GameSession *gameSession) {
         if (entities[i].surface == NULL) {
 
             SDL_Quit();
-            return 1;
+            
         }
 
         SDL_SetColorKey(entities[i].surface, SDL_TRUE,
@@ -381,7 +384,7 @@ Entity *createEntities(int numOfEntities, GameSession *gameSession) {
         if (entities[i].texture == NULL) {
 
             SDL_Quit();
-            return 1;
+            
         }
         entities[i].currentFrame = 0;
         entities[i].currentRow = 0;
@@ -664,11 +667,7 @@ void mainLoop(GameState *gms) {
             timer_s = 0;
         }
 
-        player->lastHitTime +=delta;
-
-        
-
-
+        player->lastHitTime += delta;
 
         while (SDL_PollEvent(&gameSession->event)) {
 
@@ -772,7 +771,8 @@ void mainLoop(GameState *gms) {
         UpdateEntityAnimation(entities, delta);
         entityPlayerCollision(entities, player);
         checkPlayerHit(player, entities);
-        printf("TIME BETWEEN HITS: %lf MULTIPLIER: %d\n", player->lastHitTime, player->multiplier);
+        printf("TIME BETWEEN HITS: %lf MULTIPLIER: %d\n", player->lastHitTime,
+               player->multiplier);
         // printf("checkCombo: %s\n", checkCombo(player));
         // printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType,
         //        combo_delay);
@@ -820,7 +820,7 @@ void mainLoop(GameState *gms) {
         // jeśli chcesz przesuwać ekran. W przykładzie była używana.
 
         char text2[128];
-
+        
         DrawRectangle(gameSession->screen, 4, 4, SCREEN_WIDTH - 8, 36,
                       color(gameSession, RED), color(gameSession, BLUE));
         sprintf(text,
@@ -854,7 +854,7 @@ void mainLoop(GameState *gms) {
         SDL_RenderCopy(gameSession->renderer, gameSession->scrtex, NULL, NULL);
 
         DrawEntityAnimation(gameSession, entities, camera_offset);
-
+        showMultiplier(gameSession, player);
         sprintf(text2, "[ %d POINTS  ]", *gms->players_points);
         DrawString(gameSession->screen,
                    gameSession->screen->w - strlen(text2) * 8,

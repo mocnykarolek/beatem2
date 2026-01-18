@@ -33,6 +33,43 @@ int color(GameSession *gameSession, Colors color) {
     }
 }
 
+
+void showMultiplier(GameSession* gs, Player* p){
+
+    char multiplierText[32];
+    sprintf(multiplierText, "COMBO x%d", p->multiplier);
+    Uint8 r =255, g= 255, b=255;
+    double scale = 1;
+
+    if(p->multiplier >= 16){
+        r =255, g= 0, b=0;
+        scale = 2.5;
+    } else if(p->multiplier >= 8){
+        r =255, g= 77, b=0;
+        scale =2;
+    } else if(p->multiplier >= 4){
+        r =255, g= 154, b=0;
+        scale = 1.5;
+    } else if(p->multiplier >= 2){
+        r =255, g= 193, b=0;
+        scale = 1.25;
+    }  else if(p->multiplier >= 1){
+        r =0, g= 255, b=0;
+    }
+
+    SDL_SetSurfaceColorMod(gs->charset, r, g, b);
+
+    // 3. Narysuj napis (np. w prawym górnym rogu)
+    // Przykładowa pozycja: X = szerokość ekranu - 100, Y = 10
+    DrawStringS(gs->screen, SCREEN_WIDTH - (70 * scale), 40, multiplierText, gs->charset, scale);
+
+    // 4. WAŻNE: Zresetuj kolor na biały, żeby inne napisy nie były kolorowe!
+    SDL_SetSurfaceColorMod(gs->charset, 255, 255, 255);
+    
+
+}
+
+
 int initialize_player(Player *player, GameSession *gameSession, double x,
                       double y) {
 
