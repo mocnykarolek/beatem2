@@ -296,7 +296,12 @@ Entity *createEntities(int numOfEntities, GameSession* gameSession) {
             SDL_Quit();
             return 1;
         }
-
+        entities[i].currentFrame = 0;
+        entities[i].currentRow = 0;
+        entities[i].animTimer = 0;
+        entities[i].timePerFrame = 0.2; // Musi być > 0!
+        entities[i].totalFrames = 4;    // Ile klatek ma wróg?
+        entities[i].isAttacked = 0;
 
         entities[i].frameHeight = 31;
         entities[i].frameWidth = 31;

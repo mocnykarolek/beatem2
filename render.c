@@ -60,7 +60,7 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
     
     player->frameHeight = 50;
     player->frameWidth = 21;
-    
+
     player->speed = PLAYER_SPEED;
     player->rect.x = x;
     player->rect.y = y;
@@ -217,8 +217,7 @@ void DrawEntityAnimation(GameSession *gs, Entity *entities, int cameraOffset) {
 
             // Pozycja na ekranie (z uwzględnieniem kamery i skali)
             destRect.x = (int)e->rect.x - cameraOffset;
-            destRect.y = (int)e->rect.y  +
-                         e->rect.h; // Korekta na stopy
+            destRect.y = (int)e->rect.y; // Korekta na stopy
             destRect.w = e->frameWidth;
             destRect.h = e->frameHeight;
 
