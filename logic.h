@@ -21,3 +21,5 @@ void userInputHandling(Player *player, GameSession *gameSession, GameState *gms,
                        int *quit, int *flip, double *timer_s, int *debug);
 void updateCamera(GameState* gms);
 void comboServing(Player*player, double* delta, GameSession* gameSession, GameState* gms);
+void handleKeyDown(SDL_Event *e, Player *p, GameState *gms, int *quit, int *flip);
+void handleKeyUp(SDL_Event *e, Player *p, double *timer_s, int *debug);

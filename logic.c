@@ -8,7 +8,7 @@ char *checkCombo(Player *p) {
     int test = strcmp(comboBuffer[0], comboBuffer[1]) == 0 &&
                strcmp(comboBuffer[2], "HEAVY") == 0 &&
                strcmp(comboBuffer[0], "LIGHT") == 0;
-    printf("%d\n", test);
+    
     if (strcmp(comboBuffer[0], comboBuffer[1]) == 0 &&
         strcmp(comboBuffer[2], "HEAVY") == 0 &&
         strcmp(comboBuffer[0], "LIGHT") == 0) {
@@ -805,102 +805,90 @@ void userInputHandling(Player *player, GameSession *gameSession, GameState *gms,
                        int *quit, int *flip, double *timer_s, int *debug) {
 
     while (SDL_PollEvent(&gameSession->event)) {
-
         switch (gameSession->event.type) {
-        case SDL_KEYDOWN: {
-            switch (gameSession->event.key.keysym.sym) {
+        
+        case SDL_KEYDOWN:
+            handleKeyDown(&gameSession->event, player, gms, quit, flip);
+            break;
 
-            case SDLK_ESCAPE:
-                *quit = true;
-                break;
-            case SDLK_n:
-                restartGame(gms, gameSession);
-                break;
-            case SDLK_w:
-                player->direction.y = UP;
+        case SDL_KEYUP:
+            handleKeyUp(&gameSession->event, player, timer_s, debug);
+            break;
 
-                break;
-            case SDLK_s:
-                player->direction.y = DOWN;
-
-                break;
-            case SDLK_a:
-                player->direction.x = LEFT;
-                *flip = SDL_FLIP_HORIZONTAL;
-                player->lastHeading = LEFT;
-
-                break;
-            case SDLK_d:
-                player->direction.x = RIGHT;
-                *flip = SDL_FLIP_NONE;
-                player->lastHeading = RIGHT;
-
-                break;
-
-            default:
-                break;
-            }
-
-        } break;
-        case SDL_KEYUP: {
-            switch (gameSession->event.key.keysym.sym) {
-
-            case SDLK_s:
-
-                addAction(player, "DOWN");
-                *timer_s = 0;
-                player->direction.y = RESET_ACTION;
-                break;
-
-            case SDLK_w:
-
-                addAction(player, "UP");
-                *timer_s = 0;
-                player->direction.y = RESET_ACTION;
-                break;
-
-            case SDLK_a:
-                addAction(player, "LEFT");
-                *timer_s = 0;
-                player->direction.x = RESET_ACTION;
-                break;
-
-            case SDLK_d:
-                addAction(player, "RIGHT");
-                *timer_s = 0;
-                player->direction.x = RESET_ACTION;
-                break;
-
-            case SDLK_SPACE:
-                player->isJumping = JUMP;
-                addAction(player, "JUMP");
-                *timer_s = 0;
-                break;
-            case SDLK_x:
-                player->actions.type = LIGHT_ATTACK;
-                addAction(player, "LIGHT");
-                *timer_s = 0;
-
-                break;
-            case SDLK_y:
-                player->actions.type = HEAVY_ATTACK;
-                addAction(player, "HEAVY");
-                *timer_s = 0;
-
-                break;
-            case SDLK_l:
-                if (*debug == 0)
-                    *debug = 1;
-                else
-                    *debug = 0;
-
-                break;
-            }
-
-        }; break;
         case SDL_QUIT:
             *quit = 1;
             break;
-        };
-    };
+        }
+    }
+}
+
+
+void handleKeyDown(SDL_Event *e, Player *p, GameState *gms, int *quit, int *flip) {
+    switch (e->key.keysym.sym) {
+    case SDLK_ESCAPE:
+        *quit = 1;
+        break;
+    case SDLK_n:
+        restartGame(gms, gms->gs);
+        break;
+    case SDLK_w:
+        p->direction.y = UP;
+        break;
+    case SDLK_s:
+        p->direction.y = DOWN;
+        break;
+    case SDLK_a:
+        p->direction.x = LEFT;
+        *flip = SDL_FLIP_HORIZONTAL;
+        p->lastHeading = LEFT;
+        break;
+    case SDLK_d:
+        p->direction.x = RIGHT;
+        *flip = SDL_FLIP_NONE;
+        p->lastHeading = RIGHT;
+        break;
+    }
+}
+
+void handleKeyUp(SDL_Event *e, Player *p, double *timer_s, int *debug) {
+    switch (e->key.keysym.sym) {
+    case SDLK_s:
+        addAction(p, "DOWN");
+        *timer_s = 0;
+        p->direction.y = RESET_ACTION;
+        break;
+    case SDLK_w:
+        addAction(p, "UP");
+        *timer_s = 0;
+        p->direction.y = RESET_ACTION;
+        break;
+    case SDLK_a:
+        addAction(p, "LEFT");
+        *timer_s = 0;
+        p->direction.x = RESET_ACTION;
+        break;
+    case SDLK_d:
+        addAction(p, "RIGHT");
+        *timer_s = 0;
+        p->direction.x = RESET_ACTION;
+        break;
+    case SDLK_SPACE:
+        p->isJumping = JUMP;
+        addAction(p, "JUMP");
+        *timer_s = 0;
+        break;
+    case SDLK_x:
+        p->actions.type = LIGHT_ATTACK;
+        addAction(p, "LIGHT");
+        *timer_s = 0;
+        break;
+    case SDLK_y:
+        p->actions.type = HEAVY_ATTACK;
+        addAction(p, "HEAVY");
+        *timer_s = 0;
+        break;
+    case SDLK_l:
+        *debug = !(*debug); 
+        break;
+    }
 }

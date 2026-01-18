@@ -13,8 +13,7 @@ const int WORLD_MAX_X = 1000;
 const int WORLD_MIN_X = 0;
 
 
-//TODO: OCZYSCIC ze zbednych funkcji i komentarzy itp
-//TODO: podzielic mainLoop na mniejsze
+
 
 
 
