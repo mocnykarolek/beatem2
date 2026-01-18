@@ -48,7 +48,7 @@ extern const int WORLD_MIN_X;
 #define PLAYER_MAX_HEALTH 100
 
 #define NUMOFOBSTACLES 10
-
+#define OBSTACLEHEIGHT 30
 #define NOACTION 0
 #define ACTION 1
 #define NOACTIONCHAR "..."
@@ -142,7 +142,8 @@ typedef struct Player {
     double timePerFrame;
     int totalFrames;
 
-
+    int isHurt;
+    double hurtTimer;
 
 } Player;
 

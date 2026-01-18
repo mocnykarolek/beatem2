@@ -78,7 +78,7 @@ void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
 
             break;
         case HEAVY_COMBO:
-            
+
             DrawPlayerAttack(p, gs, gms);
 
             break;
@@ -94,6 +94,39 @@ void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
         }
     }
 }
+
+void checkPlayerHit(Player *p, Entity *e) {
+
+    if (p->isHurt) {
+        return;
+    }
+
+    for (int i = 0; i < NUMOFOBSTACLES; i++) {
+        SDL_Rect HitboxRect = playerObstaclesHitbox(p, OBSTACLEHEIGHT);
+        if (e[i].isInitialized && checkCollision(HitboxRect, e[i].rect)) {
+
+            p->remainingHp -= 20;
+            if (p->remainingHp < 0)
+                p->remainingHp = 0;
+
+            p->isHurt = 1;
+            p->hurtTimer = 0.5;
+
+            p->currentRow = 3;
+            p->currentFrame = 0;
+            p->animTimer = 0;
+
+            if (p->rect.x < e[i].rect.x) {
+                p->rect.x -= 30;
+            } else {
+                p->rect.x += 30;
+            }
+
+            return;
+        }
+    }
+}
+
 void UpdateEntityAnimation(Entity *e, double delta) {
 
     for (int i = 0; i < NUMOFOBSTACLES; i++) {
@@ -112,6 +145,9 @@ void UpdateEntityAnimation(Entity *e, double delta) {
             e[i].currentFrame++;
             if (e[i].currentFrame >= e[i].totalFrames) {
                 e[i].currentFrame = 0;
+
+                if (e[i].isAttacked == 1)
+                    e[i].isAttacked = 0;
             }
         }
     }
@@ -146,6 +182,13 @@ void UpdatePlayerAnimation(Player *p, double delta) {
 
             // Fix dla ataku: Jeśli atak się skończył, można tu wyłączyć
             // isAction ale na razie zostawmy proste pętlę.
+        }
+    }
+    if (p->isHurt) {
+        p->hurtTimer -= delta;
+        if (p->isHurt <= 0) {
+            p->isHurt = 0;
+            p->currentRow = 0;
         }
     }
 }
@@ -208,7 +251,9 @@ getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
     SDL_Rect r = {0, 0, 0, 0}; // 1. Inicjalizacja zerami (bezpiecznik)
 
     // Jeśli nie ma ataku, zwracamy pusty prostokąt
-    if (p->actions.type != LIGHT_ATTACK && p->actions.type != HEAVY_ATTACK && p->comboType.comboType != SUPERCOMBO && p->comboType.comboType != HEAVY_COMBO) {
+    if (p->actions.type != LIGHT_ATTACK && p->actions.type != HEAVY_ATTACK &&
+        p->comboType.comboType != SUPERCOMBO &&
+        p->comboType.comboType != HEAVY_COMBO) {
         return r;
     }
 
@@ -220,11 +265,11 @@ getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
         reach = PLAYER_LIGHT_REACH_px;
     } else if (p->actions.type == HEAVY_ATTACK) {
         reach = PLAYER_HEAVY_REACH_px;
-    } else if (p->comboType.comboType == SUPERCOMBO){
+    } else if (p->comboType.comboType == SUPERCOMBO) {
         reach = SUPERCOMBO_REACH_px;
-    } else if (p->comboType.comboType == HEAVY_COMBO){
+    } else if (p->comboType.comboType == HEAVY_COMBO) {
         reach = HEAVYCOMBO_REACH_px;
-    } else if (p->comboType.comboType == LIGHTCOMBO_REACH_px){
+    } else if (p->comboType.comboType == LIGHTCOMBO_REACH_px) {
         reach = HEAVYCOMBO_REACH_px;
     }
 
@@ -250,9 +295,22 @@ getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
 
 void checkAttack(Player *p, Entity *e, GameState *gms) {
 
+    SDL_Rect attackBox = getAttackBox(p);
+    if (attackBox.w == 0 && attackBox.h == 0) {
+        return;
+    }
+
     for (int i = 0; i < NUMOFOBSTACLES; i++) {
         if (checkCollision(e[i].rect, getAttackBox(p))) {
-            gms->players_points++;
+
+            if (e[i].isAttacked == 0) {
+                (*gms->players_points)++;
+
+                e[i].isAttacked = 1;
+                e[i].currentFrame = 0;
+                e[i].animTimer = 0;
+            }
+
             return;
         }
     }
@@ -286,7 +344,7 @@ void restartGame(GameState *gms, GameSession *g) {
     *gms->camera_offset = 0;
 }
 
-Entity *createEntities(int numOfEntities, GameSession* gameSession) {
+Entity *createEntities(int numOfEntities, GameSession *gameSession) {
 
     Entity *entities = malloc(numOfEntities * sizeof(Entity));
     for (int i = 0; i < numOfEntities; i++) {
@@ -305,8 +363,8 @@ Entity *createEntities(int numOfEntities, GameSession* gameSession) {
         SDL_SetColorKey(entities[i].surface, SDL_TRUE,
                         SDL_MapRGB(entities[i].surface->format, 255, 0, 255));
 
-        entities[i].texture = SDL_CreateTextureFromSurface(gameSession->renderer,
-                                                       entities[i].surface);
+        entities[i].texture = SDL_CreateTextureFromSurface(
+            gameSession->renderer, entities[i].surface);
         if (entities[i].texture == NULL) {
 
             SDL_Quit();
@@ -384,20 +442,14 @@ void EntitiesRandomPosition(Entity *entities, int entityCount) {
     }
 }
 
-void entityPlayerCollision(Entity* e, Player* p){
+void entityPlayerCollision(Entity *e, Player *p) {
 
-    for (int i = 0; i < NUMOFOBSTACLES; i++)
-    {
-        if(checkCollision(e[i].rect, p->rect)){
+    for (int i = 0; i < NUMOFOBSTACLES; i++) {
+        if (checkCollision(e[i].rect, p->rect)) {
             p->rect.x = p->rect.x;
             p->rect.y = p->rect.y;
         }
-
     }
-    
-
-
-
 }
 
 void handleJumping(GameState *gms, double delta) {
@@ -700,6 +752,7 @@ void mainLoop(GameState *gms) {
         UpdatePlayerAnimation(player, delta);
         UpdateEntityAnimation(entities, delta);
         entityPlayerCollision(entities, player);
+        checkPlayerHit(player, entities);
         printf("checkCombo: %s\n", checkCombo(player));
         printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType,
                combo_delay);
@@ -772,8 +825,8 @@ void mainLoop(GameState *gms) {
 
         // fffffffffffffffffffffffff
         // RenderEntities(entities, NUMOFOBSTACLES, gameSession, camera_offset);
-        
-        DrawPlayerObstacleHitbox(player, 30, gms);
+
+        DrawPlayerObstacleHitbox(player, OBSTACLEHEIGHT, gms);
         DrawRectangle(gameSession->screen, player->position.x - camera_offset,
                       player->position.y + player->rect.h, 4, 4,
                       color(gameSession, RED), color(gameSession, BLUE));

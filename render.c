@@ -36,7 +36,7 @@ int color(GameSession *gameSession, Colors color) {
 int initialize_player(Player *player, GameSession *gameSession, double x,
                       double y) {
 
-    player->surface = SDL_LoadBMP("./textures/player.bmp");
+    player->surface = SDL_LoadBMP("./textures/mainPlayerSprite.bmp");
     if (player->surface == NULL) {
         printf("SDL_LoadBMP(stickman.bmp) error: %s\n", SDL_GetError());
         SDL_FreeSurface(gameSession->screen);
@@ -459,6 +459,8 @@ int loadCharset(GameSession *gameSession) {
 
     return 0;
 }
+
+
 
 void DrawPlayerObstacleHitbox(Player *p, int obsH, GameState *gms) {
 
