@@ -116,10 +116,10 @@ void checkPlayerHit(Player *p, Entity *e) {
             p->currentFrame = 0;
             p->animTimer = 0;
 
-            if (p->rect.x < e[i].rect.x) {
-                p->rect.x -= 30;
+            if (p->position.x < e[i].rect.x) {
+                p->position.x -= 30;
             } else {
-                p->rect.x += 30;
+                p->position.x += 30;
             }
 
             return;
@@ -155,6 +155,17 @@ void UpdateEntityAnimation(Entity *e, double delta) {
 
 void UpdatePlayerAnimation(Player *p, double delta) {
 
+    if (p->isHurt) {
+        p->currentRow =3;
+        p->hurtTimer -= delta;
+        if (p->hurtTimer <= 0) {
+            p->isHurt = 0;
+            p->currentRow = 0;
+        }
+        
+    }
+
+    else{
     // 1. Wybór rzędu (Jaka to czynność?)
     if (p->actions.type == LIGHT_ATTACK || p->actions.type == HEAVY_ATTACK) {
         p->currentRow = 2; // Rząd 3 (index 2) w twoim pliku to atak
@@ -167,7 +178,7 @@ void UpdatePlayerAnimation(Player *p, double delta) {
         p->currentRow = 0;     // Rząd 1 (index 0) to stanie (idle)
         p->timePerFrame = 0.2; // Wolniejsze "oddychanie"
     }
-
+    }
     // 2. Odliczanie czasu
     p->animTimer += delta;
 
@@ -184,13 +195,7 @@ void UpdatePlayerAnimation(Player *p, double delta) {
             // isAction ale na razie zostawmy proste pętlę.
         }
     }
-    if (p->isHurt) {
-        p->hurtTimer -= delta;
-        if (p->isHurt <= 0) {
-            p->isHurt = 0;
-            p->currentRow = 0;
-        }
-    }
+
 }
 
 void lightAttack(Player *p, double delta, GameSession *gs, GameState *gms) {
@@ -303,9 +308,16 @@ void checkAttack(Player *p, Entity *e, GameState *gms) {
     for (int i = 0; i < NUMOFOBSTACLES; i++) {
         if (checkCollision(e[i].rect, getAttackBox(p))) {
 
-            if (e[i].isAttacked == 0) {
-                (*gms->players_points)++;
+            if(p->lastHitTime <= p->max_time_between_hits_s){
+                p->multiplier *=2;
+            }else{
+                p->multiplier = 1;
+            }
 
+            if (e[i].isAttacked == 0) {
+                (*gms->players_points)+= p->multiplier;
+                p->lastHitTime =0;
+                
                 e[i].isAttacked = 1;
                 e[i].currentFrame = 0;
                 e[i].animTimer = 0;
@@ -340,6 +352,7 @@ void restartGame(GameState *gms, GameSession *g) {
                           (double)(WORLD_HEIGHT / 2))) {
         return;
     }
+    gms->entites = createEntities(NUMOFOBSTACLES, g);
     *gms->worldTime = 0;
     *gms->camera_offset = 0;
 }
@@ -527,7 +540,7 @@ Combo InitCombo(char *comboChar) {
         break;
     case SUPERCOMBO:
         current_combo.comboType = SUPERCOMBO;
-        current_combo.comboInitialTime = 2;
+        current_combo.comboInitialTime = 1.1;
         current_combo.comboTimeRemaining = current_combo.comboInitialTime;
         break;
 
@@ -651,6 +664,12 @@ void mainLoop(GameState *gms) {
             timer_s = 0;
         }
 
+        player->lastHitTime +=delta;
+
+        
+
+
+
         while (SDL_PollEvent(&gameSession->event)) {
 
             switch (gameSession->event.type) {
@@ -753,11 +772,12 @@ void mainLoop(GameState *gms) {
         UpdateEntityAnimation(entities, delta);
         entityPlayerCollision(entities, player);
         checkPlayerHit(player, entities);
-        printf("checkCombo: %s\n", checkCombo(player));
-        printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType,
-               combo_delay);
+        printf("TIME BETWEEN HITS: %lf MULTIPLIER: %d\n", player->lastHitTime, player->multiplier);
+        // printf("checkCombo: %s\n", checkCombo(player));
+        // printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType,
+        //        combo_delay);
         int test = checkCombo(player) != NOACTIONCHAR;
-        printf("%d\n", test);
+        // printf("%d\n", test);
         if (strcmp(checkCombo(player), NOACTIONCHAR) != 0 &&
             player->comboType.comboType == NO_COMBO) {
             printf("CURRENT COMBO: %d DELAY: %lf\n",
@@ -771,9 +791,9 @@ void mainLoop(GameState *gms) {
             player->comboType.comboTimeRemaining -= delta;
         else
             player->comboType.comboTimeRemaining = 0;
-        printf("CURRENT COMBO: %d COMBOTIMER: %lf \n",
-               player->comboType.comboType,
-               player->comboType.comboTimeRemaining);
+        // printf("CURRENT COMBO: %d COMBOTIMER: %lf \n",
+        //        player->comboType.comboType,
+        //        player->comboType.comboTimeRemaining);
         // break;
 
         comboHandler(player, delta, gameSession, gms);
@@ -861,7 +881,7 @@ void mainLoop(GameState *gms) {
         frames++;
     }
 
-    printf("gameloop\n");
+    // printf("gameloop\n");
 
     deallocation(gms);
 }

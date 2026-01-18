@@ -63,6 +63,8 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
         SDL_Quit();
         return 1;
     }
+
+    
     
     player->frameHeight = 50;
     player->frameWidth = 21;
@@ -75,11 +77,16 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
     player->position.x = x;
     player->position.y = y + player->rect.h;
 
+
+    player->multiplier = 1;
+    player->lastHitTime = 0;
+    player->max_time_between_hits_s = 1.3;
+
     player->currentFrame = 0;
     player->currentRow = 0;
     player->animTimer = 0;
-    player->timePerFrame = 0.15; // Prędkość zmian (im mniej, tym szybciej)
-    player->totalFrames = 4;
+    player->timePerFrame = 0.15; // czas trawnia 1 klatki animacji
+    player->totalFrames = 4;    
 
     // player->rect.w = 100;
     // player->rect.h = 100;
@@ -350,7 +357,7 @@ void PlayerAttackState(Player *p, GameSession *gs, GameState *gms) {
             if (AttackScreenPosition < 0) {
                 DrawRectangle(gs->screen, 0, p->position.y - (p->rect.h / 2),
                               spaceAvailable, 30, colorP, colorP);
-                printf("%lf . %lf\n", AttackScreenPosition, spaceAvailable);
+                // printf("%lf . %lf\n", AttackScreenPosition, spaceAvailable);
             } else
                 DrawRectangle(gs->screen, AttackScreenPosition,
                               p->position.y - (p->rect.h / 2),
@@ -386,7 +393,7 @@ void PlayerAttackState(Player *p, GameSession *gs, GameState *gms) {
             if (AttackScreenPosition < 0) {
                 DrawRectangle(gs->screen, 0, p->position.y - (p->rect.h / 2),
                               spaceAvailable, 30, colorP, colorP);
-                printf("%lf . %lf\n", AttackScreenPosition, spaceAvailable);
+                // printf("%lf . %lf\n", AttackScreenPosition, spaceAvailable);
             } else
                 DrawRectangle(gs->screen, AttackScreenPosition,
                               p->position.y - (p->rect.h / 2),
@@ -465,8 +472,8 @@ int loadCharset(GameSession *gameSession) {
 void DrawPlayerObstacleHitbox(Player *p, int obsH, GameState *gms) {
 
     SDL_Rect HitboxRect = playerObstaclesHitbox(p, obsH);
-    printf("%d %d %d %d\n", HitboxRect.x, HitboxRect.y, HitboxRect.w,
-           HitboxRect.h);
+    // printf("%d %d %d %d\n", HitboxRect.x, HitboxRect.y, HitboxRect.w,
+    //        HitboxRect.h);
 
     DrawFrame(gms->gs->screen, HitboxRect.x - *gms->camera_offset, HitboxRect.y,
               HitboxRect.h, HitboxRect.w, color(gms->gs, BLACK));

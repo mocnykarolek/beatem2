@@ -131,6 +131,7 @@ typedef struct Player {
 
     int multiplier;
     double lastHitTime;
+    double max_time_between_hits_s;
 
     int frameWidth;
     int frameHeight;
@@ -196,6 +197,7 @@ typedef struct GameSession {
     SDL_Texture *scrtex;
     SDL_Window *window;
     SDL_Renderer *renderer;
+    
 
 } GameSession;
 
@@ -207,6 +209,7 @@ typedef struct GameState {
     Entity *entites;
     int *debug_exit;
     int *players_points;
+    
 
 } GameState;
 
