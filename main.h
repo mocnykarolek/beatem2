@@ -35,6 +35,13 @@ extern const int WORLD_MIN_X;
 #define PLAYERS_HEAVY_ACTION_DURATION_S 0.7
 #define PLAYER_LIGHT_REACH_px 100
 #define PLAYER_HEAVY_REACH_px 200
+
+#define SUPERCOMBO_REACH_px 300
+
+#define HEAVYCOMBO_REACH_px 225
+
+#define LIGHTCOMBO_REACH_px 160
+
 #define COMBO_DELAY_S 2
 #define DASH_TIME 0.1
 #define MAX_ATTEMPTS 1000
@@ -64,6 +71,8 @@ typedef enum Colors {
     BLUE,
     SKYBLUE,
     TITLEGRAY,
+    YELLOW,
+    ORANGE,
 
 } Colors;
 
@@ -119,6 +128,9 @@ typedef struct Player {
     SDL_Rect *attackHitbox;
 
     Combo comboType;
+
+    int multiplier;
+    double lastHitTime;
 
     int frameWidth;
     int frameHeight;

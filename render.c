@@ -22,6 +22,12 @@ int color(GameSession *gameSession, Colors color) {
     case TITLEGRAY:
         return SDL_MapRGB(gameSession->screen->format, 0x82, 0x83, 0x85);
         break;
+    case YELLOW:
+        return SDL_MapRGB(gameSession->screen->format, 0xff, 0xff, 0x00);
+        break;
+    case ORANGE:
+        return SDL_MapRGB(gameSession->screen->format, 0xff, 0x80, 0x00);
+        break;
     default:
         return 0;
     }
@@ -30,7 +36,7 @@ int color(GameSession *gameSession, Colors color) {
 int initialize_player(Player *player, GameSession *gameSession, double x,
                       double y) {
 
-    player->surface = SDL_LoadBMP("./textures/framesCleaned.bmp");
+    player->surface = SDL_LoadBMP("./textures/player.bmp");
     if (player->surface == NULL) {
         printf("SDL_LoadBMP(stickman.bmp) error: %s\n", SDL_GetError());
         SDL_FreeSurface(gameSession->screen);
@@ -412,7 +418,18 @@ void DrawPlayerAttack(Player *p, GameSession *gs, GameState *gms) {
         // SZPONT FIX: Wcześniej nie ustawiałeś tu koloru pudełka!
         attackColor = color(gs, BLUE);
         SDL_SetTextureColorMod(p->texture, 0, 0, 255);
-    } else {
+    }else if (p->comboType.comboType ==
+               LIGHT_COMBO) { // Zakładam, że dodałeś to do enum
+        // SZPONT FIX: Wcześniej nie ustawiałeś tu koloru pudełka!
+        attackColor = color(gs, YELLOW);
+        SDL_SetTextureColorMod(p->texture, 255, 255, 0);
+    } else if (p->comboType.comboType ==
+               HEAVY_COMBO) { // Zakładam, że dodałeś to do enum
+        // SZPONT FIX: Wcześniej nie ustawiałeś tu koloru pudełka!
+        attackColor = color(gs, ORANGE);
+        SDL_SetTextureColorMod(p->texture, 255, 128, 0);
+    }
+    else {
         // To obsługuje NOACTION i NO_COMBO
         SDL_SetTextureColorMod(p->texture, 255, 255,
                                255); // Reset koloru gracza

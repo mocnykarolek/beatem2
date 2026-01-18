@@ -39,14 +39,14 @@ char *checkCombo(Player *p) {
     }
 }
 
-void updatePlayerMes(Player *p) {
+// void updatePlayerMes(Player *p) {
 
-    int base_w = p->surface->w;
-    int base_h = p->surface->h;
+//     int base_w = p->surface->w;
+//     int base_h = p->surface->h;
 
-    p->rect.w = (int)(base_w * p->scale);
-    p->rect.h = (int)(base_h * p->scale);
-}
+//     p->rect.w = (int)(base_w * p->scale);
+//     p->rect.h = (int)(base_h * p->scale);
+// }
 
 void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
 
@@ -73,6 +73,16 @@ void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
 
             break;
         case SUPERCOMBO:
+            p->position.y += UP * p->speed * 0.6 * delta;
+            DrawPlayerAttack(p, gs, gms);
+
+            break;
+        case HEAVY_COMBO:
+            
+            DrawPlayerAttack(p, gs, gms);
+
+            break;
+        case LIGHT_COMBO:
             printf("dDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
                    "DDDDDDDDDDDDDD\n");
             DrawPlayerAttack(p, gs, gms);
@@ -198,7 +208,7 @@ getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
     SDL_Rect r = {0, 0, 0, 0}; // 1. Inicjalizacja zerami (bezpiecznik)
 
     // Jeśli nie ma ataku, zwracamy pusty prostokąt
-    if (p->actions.type != LIGHT_ATTACK && p->actions.type != HEAVY_ATTACK) {
+    if (p->actions.type != LIGHT_ATTACK && p->actions.type != HEAVY_ATTACK && p->comboType.comboType != SUPERCOMBO && p->comboType.comboType != HEAVY_COMBO) {
         return r;
     }
 
@@ -208,8 +218,14 @@ getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
     // 2. Ustalenie parametrów zależnie od ataku (DRY)
     if (p->actions.type == LIGHT_ATTACK) {
         reach = PLAYER_LIGHT_REACH_px;
-    } else {
+    } else if (p->actions.type == HEAVY_ATTACK) {
         reach = PLAYER_HEAVY_REACH_px;
+    } else if (p->comboType.comboType == SUPERCOMBO){
+        reach = SUPERCOMBO_REACH_px;
+    } else if (p->comboType.comboType == HEAVY_COMBO){
+        reach = HEAVYCOMBO_REACH_px;
+    } else if (p->comboType.comboType == LIGHTCOMBO_REACH_px){
+        reach = HEAVYCOMBO_REACH_px;
     }
 
     r.h = 30; // Wysokość hitboxa
@@ -366,6 +382,22 @@ void EntitiesRandomPosition(Entity *entities, int entityCount) {
         entities[i].rect.x = testRect.x;
         entities[i].rect.y = testRect.y;
     }
+}
+
+void entityPlayerCollision(Entity* e, Player* p){
+
+    for (int i = 0; i < NUMOFOBSTACLES; i++)
+    {
+        if(checkCollision(e[i].rect, p->rect)){
+            p->rect.x = p->rect.x;
+            p->rect.y = p->rect.y;
+        }
+
+    }
+    
+
+
+
 }
 
 void handleJumping(GameState *gms, double delta) {
@@ -667,6 +699,7 @@ void mainLoop(GameState *gms) {
         actionsHandling(player, delta, gameSession, gms);
         UpdatePlayerAnimation(player, delta);
         UpdateEntityAnimation(entities, delta);
+        entityPlayerCollision(entities, player);
         printf("checkCombo: %s\n", checkCombo(player));
         printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType,
                combo_delay);
