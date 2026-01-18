@@ -35,7 +35,7 @@ extern const int WORLD_MIN_X;
 #define PLAYERS_HEAVY_ACTION_DURATION_S 0.7
 #define PLAYER_LIGHT_REACH_px 100
 #define PLAYER_HEAVY_REACH_px 200
-
+#define DAMAGEHIT 20
 #define SUPERCOMBO_REACH_px 300
 
 #define HEAVYCOMBO_REACH_px 225
@@ -44,8 +44,13 @@ extern const int WORLD_MIN_X;
 
 #define COMBO_DELAY_S 2
 #define DASH_TIME 0.1
+#define HEAVY_COMBO_INI_TIME 1.5
+#define LIGHT_COMBO_INI_TIME 0.7
+#define SUPER_COMBO_INI_TIME 1.8
 #define MAX_ATTEMPTS 1000
-#define PLAYER_MAX_HEALTH 100
+#define PLAYER_MAX_HEALTH 500
+#define KNOCKBACK_px 30
+
 
 #define NUMOFOBSTACLES 10
 #define OBSTACLEHEIGHT 30
@@ -63,6 +68,18 @@ typedef enum {
     HEAVY_ATTACK = -1,
 
 } Action;
+
+typedef enum {
+    NO_MUL = 1,
+    DOUBLE = 2,
+    SUPER = 4,
+    MEGA = 8,
+    ULTRA = 16,
+
+} MULTIPLIERS;
+
+
+
 
 typedef enum Colors {
     RED,
@@ -209,6 +226,7 @@ typedef struct GameState {
     Entity *entites;
     int *debug_exit;
     int *players_points;
+    int* showDebug;
     
 
 } GameState;

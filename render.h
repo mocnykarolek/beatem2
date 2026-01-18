@@ -4,9 +4,9 @@
 
 int color(GameSession* gameSession,Colors color);
 void changePlayersColor(Player*p, GameSession *gs, GameState *gms);
-int initialize_player(Player* player, GameSession* gameSession,double x, double y);
+int initialize_player(Player* player, GameSession* gameSession,double x, double y, GameState* gms);
 int loadCharset(GameSession* gameSession);
-int initialization(GameSession* gameSession);
+int initialization(GameSession* gameSession, GameState* gms);
 void PlayerAttackState(Player*p, GameSession *gs, GameState *gms);
 void RenderEntities(Entity* entities, int numOfEntites, GameSession* gs, int cameraOffset);
 void DrawPlayerAttack(Player *p, GameSession *gs, GameState *gms);
@@ -15,3 +15,4 @@ void DrawPlayerAnimation(GameSession *gs, Player *p, int cameraOffset);
 
 void DrawEntityAnimation(GameSession *gs, Entity *entities, int cameraOffset);
 void showMultiplier(GameSession* gs, Player* p);
+void doneTasks(GameSession* gameSession);

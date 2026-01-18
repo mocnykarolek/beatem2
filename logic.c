@@ -2,7 +2,7 @@
 #include "logic.h"
 
 #include "render.h"
-// [0,1,2,3]
+
 
 char *checkCombo(Player *p) {
     char **comboBuffer = p->recentActions;
@@ -13,13 +13,13 @@ char *checkCombo(Player *p) {
     if (strcmp(comboBuffer[0], comboBuffer[1]) == 0 &&
         strcmp(comboBuffer[2], "HEAVY") == 0 &&
         strcmp(comboBuffer[0], "LIGHT") == 0) {
-        // printf("dDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n");
+
         return "SUPERCOMBO";
 
     } else if (strcmp(comboBuffer[1], comboBuffer[2]) == 0 &&
                strcmp(comboBuffer[3], "HEAVY") == 0 &&
                strcmp(comboBuffer[1], "LIGHT") == 0) {
-        // printf("dDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD\n");
+
 
         return "SUPERCOMBO";
     } else if (strcmp(comboBuffer[0], comboBuffer[1]) == 0 &&
@@ -39,20 +39,14 @@ char *checkCombo(Player *p) {
     }
 }
 
-// void updatePlayerMes(Player *p) {
 
-//     int base_w = p->surface->w;
-//     int base_h = p->surface->h;
-
-//     p->rect.w = (int)(base_w * p->scale);
-//     p->rect.h = (int)(base_h * p->scale);
-// }
 
 void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
 
     if (p->comboType.comboType != NO_COMBO) {
         if (p->comboType.comboTimeRemaining <= 0) {
             p->comboType.comboType = NO_COMBO;
+            p->speed = PLAYER_SPEED;
         }
 
         switch (p->comboType.comboType) {
@@ -74,17 +68,17 @@ void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
             break;
         case SUPERCOMBO:
             p->position.y += UP * p->speed * 0.6 * delta;
+            p->speed = PLAYER_SPEED* 0.3;
             DrawPlayerAttack(p, gs, gms);
 
             break;
         case HEAVY_COMBO:
-
+            p->speed = PLAYER_SPEED* 0.4;
             DrawPlayerAttack(p, gs, gms);
 
             break;
         case LIGHT_COMBO:
-            printf("dDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
-                   "DDDDDDDDDDDDDD\n");
+            p->speed = PLAYER_SPEED* 0.9;
             DrawPlayerAttack(p, gs, gms);
 
             break;
@@ -105,7 +99,7 @@ void checkPlayerHit(Player *p, Entity *e) {
         SDL_Rect HitboxRect = playerObstaclesHitbox(p, OBSTACLEHEIGHT);
         if (e[i].isInitialized && checkCollision(HitboxRect, e[i].rect)) {
 
-            p->remainingHp -= 20;
+            p->remainingHp -= DAMAGEHIT;
             if (p->remainingHp < 0)
                 p->remainingHp = 0;
 
@@ -119,9 +113,9 @@ void checkPlayerHit(Player *p, Entity *e) {
             p->animTimer = 0;
 
             if (p->position.x < e[i].rect.x) {
-                p->position.x -= 30;
+                p->position.x -= KNOCKBACK_px;
             } else {
-                p->position.x += 30;
+                p->position.x += KNOCKBACK_px;
             }
 
             return;
@@ -168,34 +162,33 @@ void UpdatePlayerAnimation(Player *p, double delta) {
     }
 
     else {
-        // 1. Wybór rzędu (Jaka to czynność?)
+        
         if (p->actions.type == LIGHT_ATTACK ||
             p->actions.type == HEAVY_ATTACK) {
-            p->currentRow = 2; // Rząd 3 (index 2) w twoim pliku to atak
-            // Opcjonalnie: przyspiesz animację ataku
+            p->currentRow = 2; 
+            
             p->timePerFrame = 0.1;
         } else if (p->direction.x != 0 || p->direction.y != 0) {
-            p->currentRow = 1; // Rząd 2 (index 1) to chodzenie
+            p->currentRow = 1; 
             p->timePerFrame = 0.15;
         } else {
-            p->currentRow = 0;     // Rząd 1 (index 0) to stanie (idle)
-            p->timePerFrame = 0.2; // Wolniejsze "oddychanie"
+            p->currentRow = 0;    
+            p->timePerFrame = 0.2; 
         }
     }
-    // 2. Odliczanie czasu
+    
     p->animTimer += delta;
 
-    // 3. Zmiana klatki
+    
     if (p->animTimer >= p->timePerFrame) {
         p->animTimer = 0;
         p->currentFrame++;
 
-        // Zapętlanie (1, 2, 3, 4 -> 1...)
+        
         if (p->currentFrame >= p->totalFrames) {
             p->currentFrame = 0;
 
-            // Fix dla ataku: Jeśli atak się skończył, można tu wyłączyć
-            // isAction ale na razie zostawmy proste pętlę.
+            
         }
     }
 }
@@ -226,15 +219,15 @@ void HeavyAttack(Player *p, double delta, GameSession *gs, GameState *gms) {
     }
 
     if (p->actions.RemainingTime_s > 0) {
-
+        
         DrawPlayerAttack(p, gs, gms);
-
+        p->speed = PLAYER_SPEED * 0.5;
         p->actions.RemainingTime_s -= delta;
     }
 
     if (p->actions.RemainingTime_s <= 0 && p->isAction) {
         p->isAction = NOACTION;
-
+        p->speed = PLAYER_SPEED;
         p->actions.type = NOACTION;
         p->actions.RemainingTime_s = PLAYERS_HEAVY_ACTION_DURATION_S;
     }
@@ -254,20 +247,21 @@ void actionsHandling(Player *p, double delta, GameSession *gs, GameState *gms) {
 }
 
 SDL_Rect
-getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
-    SDL_Rect r = {0, 0, 0, 0}; // 1. Inicjalizacja zerami (bezpiecznik)
+getAttackBox(Player *p) { 
+    SDL_Rect r = {0, 0, 0, 0};
 
-    // Jeśli nie ma ataku, zwracamy pusty prostokąt
+    
     if (p->actions.type != LIGHT_ATTACK && p->actions.type != HEAVY_ATTACK &&
         p->comboType.comboType != SUPERCOMBO &&
-        p->comboType.comboType != HEAVY_COMBO) {
+        p->comboType.comboType != HEAVY_COMBO &&
+        p->comboType.comboType != LIGHT_COMBO) {
         return r;
     }
 
     int reach = 0;
     int offset_x = 30; // Odstęp od krawędzi gracza
 
-    // 2. Ustalenie parametrów zależnie od ataku (DRY)
+    
     if (p->actions.type == LIGHT_ATTACK) {
         reach = PLAYER_LIGHT_REACH_px;
     } else if (p->actions.type == HEAVY_ATTACK) {
@@ -276,24 +270,23 @@ getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
         reach = SUPERCOMBO_REACH_px;
     } else if (p->comboType.comboType == HEAVY_COMBO) {
         reach = HEAVYCOMBO_REACH_px;
-    } else if (p->comboType.comboType == LIGHTCOMBO_REACH_px) {
-        reach = HEAVYCOMBO_REACH_px;
+    } else if (p->comboType.comboType == LIGHT_COMBO) {
+        reach = LIGHTCOMBO_REACH_px;
     }
 
     r.h = 30; // Wysokość hitboxa
     r.y =
-        (int)p->position.y - (p->rect.h / 2); // Wysokość: np. w połowie postaci
+        (int)p->position.y - (p->rect.h / 2);
 
     // 3. Obliczenia w WORLD SPACE (bez kamery!)
     if (p->lastHeading == RIGHT) {
-        // Atak w prawo: pozycja gracza + szerokość gracza + odstęp
+        
         r.x = (int)p->position.x + p->rect.w + offset_x;
         r.w = reach;
-    } else { // LEFT
-        // Atak w lewo: pozycja gracza - zasięg
+    } else { 
+        
         r.x = (int)p->position.x - reach;
-        // Tutaj opcjonalnie mały fix, jeśli chcesz by atak wychodził idealnie z
-        // pleców czy przodu Ale generalnie:
+       
         r.w = reach;
     }
 
@@ -341,6 +334,44 @@ SDL_Rect playerObstaclesHitbox(Player *p, int obsH) {
     return playerHitbox;
 }
 
+void playerInits(Player*player, double x, double y, GameSession* gameSession){
+    player->frameHeight = 50;
+    player->frameWidth = 21;
+    player->speed = PLAYER_SPEED;
+    player->rect.x = x;
+    player->rect.y = y;
+    player->rect.w = player->frameWidth;
+    player->rect.h = player->frameHeight;
+    player->position.x = x;
+    player->position.y = y + player->rect.h;
+    player->multiplier = 1;
+    player->lastHitTime = 0;
+    player->max_time_between_hits_s = 1.3;
+    player->currentFrame = 0;
+    player->currentRow = 0;
+    player->animTimer = 0;
+    player->timePerFrame = 0.15; // czas trawnia 1 klatki animacji
+    player->totalFrames = 4;    
+    player->remainingHp = PLAYER_MAX_HEALTH;
+    player->direction.x = 0;
+    player->direction.y = 0;
+    player->isJumping = RESET_ACTION;
+    player->jumpingTime_s = PLAYER_JUMP_TIME;
+    player->RemainingJumpTime_s = player->jumpingTime_s;
+    player->isAction = RESET_ACTION;
+    player->actions.type = NOACTION;
+    player->actions.RemainingTime_s = 0;
+    player->color.lighAttack = color(gameSession, GREEN);
+    player->color.heavyAttack = color(gameSession, RED);
+    player->lastHeading = 1;
+    player->scale = 1.0f + player->position.y /
+                               ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 2.0f;
+    player->comboType.comboType = NO_COMBO;
+    for (int i = 0; i < 4; i++) {
+        player->recentActions[i] = "...";
+    }
+}
+
 void addAction(Player *p, char *action) {
 
     for (int i = 3; i > 0; i--) {
@@ -351,13 +382,48 @@ void addAction(Player *p, char *action) {
 
 void restartGame(GameState *gms, GameSession *g) {
 
+    if(gms->entites != NULL){
+
+        for (int i = 0; i < NUMOFOBSTACLES ;i++)
+        {
+            if (gms->entites[i].texture) {
+                SDL_DestroyTexture(gms->entites[i].texture);
+            }
+            if (gms->entites[i].surface) {
+                SDL_FreeSurface(gms->entites[i].surface);
+            }
+        }
+        free(gms->entites);
+    }
+    if (gms->p->texture) {
+        SDL_DestroyTexture(gms->p->texture);
+        gms->p->texture = NULL;
+    }
+    if (gms->p->surface) {
+        SDL_FreeSurface(gms->p->surface);
+        gms->p->surface = NULL;
+    }
+
+
     if (initialize_player(gms->p, g, (double)(WORLD_WIDTH / 2),
-                          (double)(WORLD_HEIGHT / 2))) {
+                          (double)(WORLD_HEIGHT / 2), gms)) {
         return;
     }
     gms->entites = createEntities(NUMOFOBSTACLES, g);
+    EntitiesRandomPosition(gms->entites, NUMOFOBSTACLES);
+
+    if (gms->players_points) {
+        *gms->players_points = 0;
+    }
+
     *gms->worldTime = 0;
     *gms->camera_offset = 0;
+
+
+    for (int i = 0; i < 4; i++) {
+        
+        gms->p->recentActions[i] = "...";
+    }
 }
 
 Entity *createEntities(int numOfEntities, GameSession *gameSession) {
@@ -389,8 +455,8 @@ Entity *createEntities(int numOfEntities, GameSession *gameSession) {
         entities[i].currentFrame = 0;
         entities[i].currentRow = 0;
         entities[i].animTimer = 0;
-        entities[i].timePerFrame = 0.2; // Musi być > 0!
-        entities[i].totalFrames = 4;    // Ile klatek ma wróg?
+        entities[i].timePerFrame = 0.2; 
+        entities[i].totalFrames = 4; 
         entities[i].isAttacked = 0;
 
         entities[i].frameHeight = 30;
@@ -420,6 +486,14 @@ int checkCollision(SDL_Rect rect1, SDL_Rect rect2) {
 
 void EntitiesRandomPosition(Entity *entities, int entityCount) {
 
+    SDL_Rect playerSafeZone;
+    int margin = 50;
+
+    playerSafeZone.x = (WORLD_WIDTH / 2) - margin;
+    playerSafeZone.y = (WORLD_HEIGHT / 2) - margin;
+
+    playerSafeZone.w = (margin * 2) + 30; 
+    playerSafeZone.h = (margin * 2) + 50;
     for (int i = 0; i < entityCount; i++) {
 
         int collisionDetected;
@@ -443,16 +517,19 @@ void EntitiesRandomPosition(Entity *entities, int entityCount) {
                 }
             }
 
+            if (collisionDetected == 0) {
+                if (checkCollision(testRect, playerSafeZone)) {
+                    collisionDetected = 1;
+                    
+                }
+            }
             attemps++;
-
             if (attemps > MAX_ATTEMPTS) {
                 entities[i].isInitialized = false;
                 break;
             } else
                 entities[i].isInitialized = true;
-
         } while (collisionDetected);
-
         entities[i].rect.x = testRect.x;
         entities[i].rect.y = testRect.y;
     }
@@ -486,73 +563,46 @@ void handleJumping(GameState *gms, double delta) {
         gms->p->direction.y = RESET_ACTION;
     }
 
-    // printf("Remaining jump timer: %lf\n", gms->p->RemainingJumpTime_s);
+    
 }
 
 Combo InitCombo(char *comboChar) {
-    int Combotype;
-    if (strcmp(comboChar, "LEFT") == 0)
-        Combotype = LEFT_DASH;
-    else if (strcmp(comboChar, "RIGHT") == 0)
-        Combotype = RIGHT_DASH;
-    else if (strcmp(comboChar, "UP") == 0)
-        Combotype = UP_DASH;
-    else if (strcmp(comboChar, "DOWN") == 0)
-        Combotype = DOWN_DASH;
-    else if (strcmp(comboChar, "LIGHT") == 0)
-        Combotype = LIGHT_COMBO;
-    else if (strcmp(comboChar, "HEAVY") == 0)
-        Combotype = HEAVY_COMBO;
-    else if (strcmp(comboChar, "SUPERCOMBO") == 0)
-        Combotype = SUPERCOMBO;
-
-    else
-        Combotype = NO_COMBO;
-
     Combo current_combo;
-    switch (Combotype) {
-    case LEFT_DASH:
+    
+
+    current_combo.comboType = NO_COMBO;
+    current_combo.comboInitialTime = 0;
+
+
+    if (strcmp(comboChar, "LEFT") == 0) {
         current_combo.comboType = LEFT_DASH;
         current_combo.comboInitialTime = DASH_TIME;
-        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
-        break;
-    case RIGHT_DASH:
+    } 
+    else if (strcmp(comboChar, "RIGHT") == 0) {
         current_combo.comboType = RIGHT_DASH;
         current_combo.comboInitialTime = DASH_TIME;
-        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
-        break;
-    case UP_DASH:
+    }
+    else if (strcmp(comboChar, "UP") == 0) {
         current_combo.comboType = UP_DASH;
         current_combo.comboInitialTime = DASH_TIME;
-        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
-        break;
-    case DOWN_DASH:
+    }
+    else if (strcmp(comboChar, "DOWN") == 0) {
         current_combo.comboType = DOWN_DASH;
         current_combo.comboInitialTime = DASH_TIME;
-        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
-        break;
-    case LIGHT_COMBO:
-        current_combo.comboType = LIGHT_COMBO;
-        current_combo.comboInitialTime = 2;
-        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
-        break;
-    case HEAVY_COMBO:
-        current_combo.comboType = HEAVY_COMBO;
-        current_combo.comboInitialTime = 1;
-        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
-        break;
-    case SUPERCOMBO:
-        current_combo.comboType = SUPERCOMBO;
-        current_combo.comboInitialTime = 1.1;
-        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
-        break;
-
-    default:
-        current_combo.comboType = NO_COMBO;
-        current_combo.comboInitialTime = 0;
-        current_combo.comboTimeRemaining = current_combo.comboInitialTime;
-        break;
     }
+    else if (strcmp(comboChar, "LIGHT") == 0) {
+        current_combo.comboType = LIGHT_COMBO;
+        current_combo.comboInitialTime = LIGHT_COMBO_INI_TIME;
+    }
+    else if (strcmp(comboChar, "HEAVY") == 0) {
+        current_combo.comboType = HEAVY_COMBO;
+        current_combo.comboInitialTime = HEAVY_COMBO_INI_TIME;
+    }
+    else if (strcmp(comboChar, "SUPERCOMBO") == 0) {
+        current_combo.comboType = SUPERCOMBO;
+        current_combo.comboInitialTime = SUPER_COMBO_INI_TIME;
+    }
+    current_combo.comboTimeRemaining = current_combo.comboInitialTime;
 
     return current_combo;
 }
@@ -585,14 +635,14 @@ void playerMovement(GameSession *gs, Player *p, double delta) {
     p->scale =
         1.0f + p->position.y / ((float)WORLD_MAX_Y - (float)WORLD_MIN_Y) * 2.0f;
 
-    // updatePlayerMes(p);
+
 }
 
 void mainLoop(GameState *gms) {
     GameSession *gameSession = malloc(sizeof(GameSession));
     gms->gs = gameSession;
 
-    if (!initialization(gameSession)) {
+    if (!initialization(gameSession, gms)) {
         SDL_Quit();
         return;
     }
@@ -603,7 +653,7 @@ void mainLoop(GameState *gms) {
 
     gms->p = player;
     if (initialize_player(player, gameSession, (double)(WORLD_WIDTH / 2),
-                          (double)(WORLD_HEIGHT / 2))) {
+                          (double)(WORLD_HEIGHT / 2),gms)) {
         return;
     }
     if (loadCharset(gameSession)) {
@@ -623,11 +673,15 @@ void mainLoop(GameState *gms) {
     int sky_color = color(gameSession, SKYBLUE);
     int background_color = color(gameSession, TITLEGRAY);
     int flip = SDL_FLIP_NONE;
+    int debug = 0;
+    gms->showDebug = &debug;
 
     int quit = false;
     int t1, t2, frames, rc;
     double delta, worldTime, fpsTimer, fps, distance, timer_s, combo_delay;
 
+    
+    
     t1 = SDL_GetTicks();
 
     char text[128];
@@ -744,13 +798,19 @@ void mainLoop(GameState *gms) {
                     player->actions.type = LIGHT_ATTACK;
                     addAction(player, "LIGHT");
                     timer_s = 0;
-                    // printf("Light attack executed\n");
+
                     break;
                 case SDLK_y:
                     player->actions.type = HEAVY_ATTACK;
                     addAction(player, "HEAVY");
                     timer_s = 0;
-                    // printf("Heavy attack executed\n");
+
+                    break;
+                case SDLK_l:
+                    if(debug == 0) debug = 1;
+                    else debug = 0;
+
+
                     break;
                 }
 
@@ -773,11 +833,9 @@ void mainLoop(GameState *gms) {
         checkPlayerHit(player, entities);
         printf("TIME BETWEEN HITS: %lf MULTIPLIER: %d\n", player->lastHitTime,
                player->multiplier);
-        // printf("checkCombo: %s\n", checkCombo(player));
-        // printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType,
-        //        combo_delay);
+
         int test = checkCombo(player) != NOACTIONCHAR;
-        // printf("%d\n", test);
+
         if (strcmp(checkCombo(player), NOACTIONCHAR) != 0 &&
             player->comboType.comboType == NO_COMBO) {
             printf("CURRENT COMBO: %d DELAY: %lf\n",
@@ -791,10 +849,7 @@ void mainLoop(GameState *gms) {
             player->comboType.comboTimeRemaining -= delta;
         else
             player->comboType.comboTimeRemaining = 0;
-        // printf("CURRENT COMBO: %d COMBOTIMER: %lf \n",
-        //        player->comboType.comboType,
-        //        player->comboType.comboTimeRemaining);
-        // break;
+
 
         comboHandler(player, delta, gameSession, gms);
 
@@ -813,11 +868,7 @@ void mainLoop(GameState *gms) {
                 WORLD_MAX_X - SCREEN_WIDTH + player->rect.w * player->scale;
         }
 
-        // DrawTexture(gamestate->renderer, player->texture, player->position.x,
-        // player->position.y+player->rect.h, player->rect.w, player->rect.h,
-        // player->scale, 0,flip); Zmienna camera_offset (którą masz w mainLoop)
-        // jest ważna,
-        // jeśli chcesz przesuwać ekran. W przykładzie była używana.
+
 
         char text2[128];
         
@@ -830,23 +881,24 @@ void mainLoop(GameState *gms) {
         DrawString(gameSession->screen,
                    gameSession->screen->w / 2 - strlen(text) * 8 / 2, 10, text,
                    gameSession->charset);
+        if(debug){
         sprintf(text2, "[ %s %s %s %s ]", player->recentActions[0],
                 player->recentActions[1], player->recentActions[2],
                 player->recentActions[3]);
         DrawString(gameSession->screen,
                    gameSession->screen->w / 2 - strlen(text2) * 8 / 2, 20,
                    text2, gameSession->charset);
-        // fffffffffffffffff
+        }
+
         DrawRectangle(gameSession->screen, 4, 4, 100, 36,
                       color(gameSession, BLACK), color(gameSession, RED));
         sprintf(text, "HEALTH: %d ", player->remainingHp);
-
+        doneTasks(gameSession);
         DrawString(gameSession->screen, 6, 20, text, gameSession->charset);
 
-        // fffffffffffffffffffffffff
-        // RenderEntities(entities, NUMOFOBSTACLES, gameSession, camera_offset);
 
-        DrawPlayerObstacleHitbox(player, OBSTACLEHEIGHT, gms);
+
+        
         DrawRectangle(gameSession->screen, player->position.x - camera_offset,
                       player->position.y + player->rect.h, 4, 4,
                       color(gameSession, RED), color(gameSession, BLUE));
@@ -857,23 +909,14 @@ void mainLoop(GameState *gms) {
         showMultiplier(gameSession, player);
         sprintf(text2, "[ %d POINTS  ]", *gms->players_points);
         DrawString(gameSession->screen,
-                   gameSession->screen->w - strlen(text2) * 8,
-                   SCREEN_HEIGHT - 30, text2, gameSession->charset);
-        // SDL_RenderCopy(gamestate->renderer, player->texture, NULL,
-        // &player->rect);
+                   4,
+                   50, text2, gameSession->charset);
+
 
         SDL_UpdateTexture(gameSession->scrtex, NULL,
                           gameSession->screen->pixels,
                           gameSession->screen->pitch);
 
-        // DrawTexture(gameSession->renderer, player->texture,
-        //             (int)player->position.x -
-        //                 camera_offset, // X z uwzględnieniem kamery
-        //             (int)player->position.y +
-        //                 player->rect.h, // Y STÓP (Głowa + Wysokość)
-        //             player->rect.w,     // Szerokość (100) - bezpieczna z
-        //             rect player->rect.h,     // Wysokość (100) - bezpieczna z
-        //             rect player->scale,      // Twoja skala 0, flip);
         DrawPlayerAnimation(gameSession, player, *gms->camera_offset);
 
         SDL_RenderPresent(gameSession->renderer);
@@ -881,7 +924,7 @@ void mainLoop(GameState *gms) {
         frames++;
     }
 
-    // printf("gameloop\n");
+    
 
     deallocation(gms);
 }
@@ -894,6 +937,12 @@ void deallocation(GameState *gms) {
     free(gms->entites);
     free(gms->p->recentActions);
     free(gms->gs);
+    
+    SDL_FreeSurface(gms->gs->screen);
+    SDL_FreeSurface(gms->gs->charset);
+    SDL_DestroyTexture(gms->gs->scrtex);
+    SDL_DestroyWindow(gms->gs->window);
+    SDL_DestroyRenderer(gms->gs->renderer);
 
     SDL_Quit();
 }

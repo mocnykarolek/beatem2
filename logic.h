@@ -12,3 +12,5 @@ int checkCollision(SDL_Rect rect1, SDL_Rect rect2);
 void UpdatePlayerAnimation(Player *p, double delta);
 void deallocation(GameState* gms);
 Entity *createEntities(int numOfEntities, GameSession* gameSession);
+void playerInits(Player*player, double x, double y, GameSession* gameSession);
+void EntitiesRandomPosition(Entity *entities, int entityCount);

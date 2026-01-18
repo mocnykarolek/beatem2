@@ -4,17 +4,19 @@
 #include "render.h"
 
 const int WORLD_WIDTH = SCREEN_WIDTH;
-const int BACKGROUND_HEIGHT = -10 + SCREEN_HEIGHT/4;
-// const int WORLD_HEIGHT = SCREEN_HEIGHT;
+const int BACKGROUND_HEIGHT = 160;
 const int WORLD_HEIGHT = (int)(SCREEN_HEIGHT - BACKGROUND_HEIGHT);
-
 const int WORLD_MAX_Y = SCREEN_HEIGHT;
 const int WORLD_MIN_Y = BACKGROUND_HEIGHT;
 
 const int WORLD_MAX_X = 1000;
 const int WORLD_MIN_X = 0;
-//TODO: fix attack hitboxes
-//TODO: update player w and h by scale and refresh values with new one every loop iteration
+
+
+//TODO: OCZYSCIC ze zbednych funkcji i komentarzy itp
+//TODO: podzielic mainLoop na mniejsze
+
+
 
 int main(int argc, char** argv){
     
@@ -23,17 +25,15 @@ int main(int argc, char** argv){
     int exit = 0;
     gms->debug_exit = &exit;
 
-    printf("jfjfffdgd\n");
-
-
-    printf("chuiju");
+    
+    
     mainLoop(gms);
 
     free(gms);
 
    return 0;
 }
-
+//fds
 // draw a text txt on surface screen, starting from the point (x, y)
 // charset is a 128x128 bitmap containing character images
 void DrawString(SDL_Surface *screen, int x, int y, const char *text,
@@ -155,8 +155,7 @@ void DrawRectangle(SDL_Surface *screen, int x, int y, int l, int k,
 
 
 /*
-f
-sdfsfdsd
+
 */
 void DrawFrame(SDL_Surface *screen, int x, int y, int l, int k,
                    Uint32 outlineColor) {
