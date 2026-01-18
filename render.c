@@ -269,3 +269,53 @@ int initialization(GameSession *gameSession, GameState *gms) {
     return 1;
 }
 
+
+
+void RenderScene(GameSession* gameSession, GameState* gms,Entity* entities, double* worldTime, double *fps, Player* player, int*debug){
+
+    char text[128];
+        char text2[128];
+        DrawRectangle(gameSession->screen, 4, 4, SCREEN_WIDTH - 8, 36,
+                      color(gameSession, RED), color(gameSession, BLUE));
+        
+        sprintf(text, "Czas: %.1lf s %.0lf fps ", *worldTime, *fps);
+        DrawString(gameSession->screen,
+                   gameSession->screen->w / 2 - strlen(text) * 8 / 2, 10, text,
+                   gameSession->charset);
+        
+        if (debug) {
+            sprintf(text2, "[ %s %s %s %s ]", player->recentActions[0],
+                    player->recentActions[1], player->recentActions[2],
+                    player->recentActions[3]);
+            DrawString(gameSession->screen,
+                       gameSession->screen->w / 2 - strlen(text2) * 8 / 2, 20,
+                       text2, gameSession->charset);
+        }
+        DrawRectangle(gameSession->screen, 4, 4, 100, 36,
+                      color(gameSession, BLACK), color(gameSession, RED));
+        sprintf(text, "HEALTH: %d ", player->remainingHp);
+        
+
+        doneTasks(gameSession); 
+        
+        DrawString(gameSession->screen, 6, 20, text, gameSession->charset);
+
+
+        DrawRectangle(gameSession->screen, player->position.x - *gms->camera_offset,
+                      player->position.y + player->rect.h, 4, 4,
+                      color(gameSession, RED), color(gameSession, BLUE));
+
+        SDL_RenderCopy(gameSession->renderer, gameSession->scrtex, NULL, NULL);
+
+        DrawEntityAnimation(gameSession, entities, *gms->camera_offset);
+        showMultiplier(gameSession, player);
+        sprintf(text2, "[ %d POINTS  ]", *gms->players_points);
+        DrawString(gameSession->screen, 4, 50, text2, gameSession->charset);
+
+        SDL_UpdateTexture(gameSession->scrtex, NULL,
+                          gameSession->screen->pixels,
+                          gameSession->screen->pitch);
+
+        DrawPlayerAnimation(gameSession, player, *gms->camera_offset);
+        SDL_RenderPresent(gameSession->renderer);
+}

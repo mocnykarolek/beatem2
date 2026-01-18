@@ -16,3 +16,4 @@ void DrawPlayerAnimation(GameSession *gs, Player *p, int cameraOffset);
 void DrawEntityAnimation(GameSession *gs, Entity *entities, int cameraOffset);
 void showMultiplier(GameSession* gs, Player* p);
 void doneTasks(GameSession* gameSession);
+void RenderScene(GameSession* gameSession, GameState* gms,Entity* entities, double* worldTime, double *fps, Player* player, int*debug);
