@@ -42,7 +42,7 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
         return 1;
     }
 
-    SDL_SetColorKey(player->surface, SDL_TRUE, 
+    SDL_SetColorKey(player->surface, SDL_TRUE,
                     SDL_MapRGB(player->surface->format, 255, 0, 255));
 
     player->texture =
@@ -57,11 +57,11 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
         SDL_Quit();
         return 1;
     }
-    player->speed = PLAYER_SPEED;
+    
     player->frameHeight = 50;
     player->frameWidth = 21;
-
-
+    
+    player->speed = PLAYER_SPEED;
     player->rect.x = x;
     player->rect.y = y;
     player->rect.w = player->frameWidth;
@@ -75,7 +75,6 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
     player->timePerFrame = 0.15; // Prędkość zmian (im mniej, tym szybciej)
     player->totalFrames = 4;
 
-
     // player->rect.w = 100;
     // player->rect.h = 100;
     player->remainingHp = PLAYER_MAX_HEALTH;
@@ -85,7 +84,7 @@ int initialize_player(Player *player, GameSession *gameSession, double x,
     player->isJumping = RESET_ACTION;
     player->jumpingTime_s = PLAYER_JUMP_TIME;
     player->RemainingJumpTime_s = player->jumpingTime_s;
-    
+
     player->isAction = RESET_ACTION;
     player->actions.type = NOACTION;
     player->actions.RemainingTime_s = 0;
@@ -170,9 +169,8 @@ void changePlayersColor(Player *p, GameSession *gs, GameState *gms) {
     }
 }
 
-
 void DrawPlayerAnimation(GameSession *gs, Player *p, int cameraOffset) {
-    
+
     SDL_Rect srcRect;  // Co wycinamy z obrazka
     SDL_Rect destRect; // Gdzie rysujemy na ekranie
 
@@ -184,7 +182,8 @@ void DrawPlayerAnimation(GameSession *gs, Player *p, int cameraOffset) {
 
     // Pozycja na ekranie (z uwzględnieniem kamery i skali)
     destRect.x = (int)p->position.x - cameraOffset;
-    destRect.y = (int)p->position.y - (p->rect.h * p->scale) + p->rect.h; // Korekta na stopy
+    destRect.y = (int)p->position.y - (p->rect.h * p->scale) +
+                 p->rect.h; // Korekta na stopy
     destRect.w = p->frameWidth * p->scale;
     destRect.h = p->frameHeight * p->scale;
 
@@ -195,10 +194,44 @@ void DrawPlayerAnimation(GameSession *gs, Player *p, int cameraOffset) {
     }
 
     // Rysujemy wycinek!
-    SDL_RenderCopyEx(gs->renderer, p->texture, 
-                     &srcRect,   // <-- Kluczowa zmiana: nie NULL, a srcRect
-                     &destRect, 
-                     0, NULL, flip);
+    SDL_RenderCopyEx(gs->renderer, p->texture,
+                     &srcRect, // <-- Kluczowa zmiana: nie NULL, a srcRect
+                     &destRect, 0, NULL, flip);
+}
+
+void DrawEntityAnimation(GameSession *gs, Entity *entities, int cameraOffset) {
+
+    for (int i = 0; i < NUMOFOBSTACLES; i++) {
+        Entity *e = &entities[i];
+        // printf("cords X: %d Y: %d \n", e->rect.x, e->rect.y);
+        // printf("fsdfsd\n");
+        if (e->isInitialized) {
+            SDL_Rect srcRect;  // Co wycinamy z obrazka
+            SDL_Rect destRect; // Gdzie rysujemy na ekranie
+
+            // --- MATEMATYKA SPRITESHEETA ---
+            srcRect.x = e->currentFrame * e->frameWidth; // Przesunięcie w prawo
+            srcRect.y = e->currentRow * e->frameHeight;  // Przesunięcie w dół
+            srcRect.w = e->frameWidth;
+            srcRect.h = e->frameHeight;
+
+            // Pozycja na ekranie (z uwzględnieniem kamery i skali)
+            destRect.x = (int)e->rect.x - cameraOffset;
+            destRect.y = (int)e->rect.y  +
+                         e->rect.h; // Korekta na stopy
+            destRect.w = e->frameWidth;
+            destRect.h = e->frameHeight;
+
+            // Obsługa obracania (lewo/prawo)
+            
+
+            // Rysujemy wycinek!
+            SDL_RenderCopyEx(
+                gs->renderer, e->texture,
+                &srcRect, // <-- Kluczowa zmiana: nie NULL, a srcRect
+                &destRect, 0, NULL, 0);
+        }
+    }
 }
 
 void PlayerAttackState(Player *p, GameSession *gs, GameState *gms) {
@@ -368,24 +401,26 @@ void DrawPlayerAttack(Player *p, GameSession *gs, GameState *gms) {
     SDL_Rect attackBox = getAttackBox(p);
     int attackColor;
 
-    if (p->actions.type == LIGHT_ATTACK) {        //
-        attackColor = color(gs, GREEN);           
+    if (p->actions.type == LIGHT_ATTACK) { //
+        attackColor = color(gs, GREEN);
         SDL_SetTextureColorMod(p->texture, 0, 255, 0);
     } else if (p->actions.type == HEAVY_ATTACK) { //
         attackColor = color(gs, RED);             //
         SDL_SetTextureColorMod(p->texture, 255, 0, 0);
 
-    }else if (p->comboType.comboType == SUPERCOMBO) { // Zakładam, że dodałeś to do enum
+    } else if (p->comboType.comboType ==
+               SUPERCOMBO) { // Zakładam, że dodałeś to do enum
         // SZPONT FIX: Wcześniej nie ustawiałeś tu koloru pudełka!
-        attackColor = color(gs, BLUE); 
+        attackColor = color(gs, BLUE);
         SDL_SetTextureColorMod(p->texture, 0, 0, 255);
-    } 
-    else {
+    } else {
         // To obsługuje NOACTION i NO_COMBO
-        SDL_SetTextureColorMod(p->texture, 255, 255, 255); // Reset koloru gracza
-        
-        // Jeśli nie ma ataku, przerywamy funkcję, żeby nie rysować pustego prostokąta
-        return; 
+        SDL_SetTextureColorMod(p->texture, 255, 255,
+                               255); // Reset koloru gracza
+
+        // Jeśli nie ma ataku, przerywamy funkcję, żeby nie rysować pustego
+        // prostokąta
+        return;
     }
 
     // 4. Rysowanie z konwersją: World Space -> Screen Space
@@ -409,39 +444,30 @@ int loadCharset(GameSession *gameSession) {
     return 0;
 }
 
-void DrawPlayerObstacleHitbox(Player *p, int obsH, GameState* gms){
+void DrawPlayerObstacleHitbox(Player *p, int obsH, GameState *gms) {
 
     SDL_Rect HitboxRect = playerObstaclesHitbox(p, obsH);
-    printf("%d %d %d %d\n", HitboxRect.x, HitboxRect.y, HitboxRect.w, HitboxRect.h );
-    
-    DrawFrame(gms->gs->screen,  HitboxRect.x - *gms->camera_offset,
-                      HitboxRect.y, HitboxRect.h, HitboxRect.w,
-                      color(gms->gs, BLACK));
+    printf("%d %d %d %d\n", HitboxRect.x, HitboxRect.y, HitboxRect.w,
+           HitboxRect.h);
 
-
+    DrawFrame(gms->gs->screen, HitboxRect.x - *gms->camera_offset, HitboxRect.y,
+              HitboxRect.h, HitboxRect.w, color(gms->gs, BLACK));
 }
 
+void RenderEntities(Entity *entities, int numOfEntites, GameSession *gs,
+                    int cameraOffset) {
 
-void RenderEntities(Entity* entities, int numOfEntites, GameSession* gs, int cameraOffset){
-
-    
-    for (int  i = 0; i < numOfEntites; i++)
-    {
+    for (int i = 0; i < numOfEntites; i++) {
         Entity *e = &entities[i];
         // printf("cords X: %d Y: %d \n", e->rect.x, e->rect.y);
         // printf("fsdfsd\n");
-        if(e->isInitialized){
+        if (e->isInitialized) {
             int scrX = e->rect.x - cameraOffset;
-            DrawRectangle(gs->screen, scrX, e->rect.y, e->rect.w, e->rect.h, color(gs, BLACK ), color(gs, RED) );
-                
+            DrawRectangle(gs->screen, scrX, e->rect.y, e->rect.w, e->rect.h,
+                          color(gs, BLACK), color(gs, RED));
         }
     }
-    
-    
-
-
 }
-
 
 int initialization(GameSession *gameSession) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {

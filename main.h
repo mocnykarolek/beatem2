@@ -156,6 +156,23 @@ typedef struct {
     SDL_Rect rect;
     int health;
     int isInitialized;
+
+    SDL_Surface *surface;
+    SDL_Texture *texture;
+
+    int isAttacked;
+
+    int frameWidth;
+    int frameHeight;
+
+    int currentFrame;
+    int currentRow;
+
+    double animTimer;
+    double timePerFrame;
+    int totalFrames;
+
+
 } Entity;
 
 typedef struct GameSession {

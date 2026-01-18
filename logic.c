@@ -39,16 +39,13 @@ char *checkCombo(Player *p) {
     }
 }
 
-void updatePlayerMes(Player* p){
+void updatePlayerMes(Player *p) {
 
     int base_w = p->surface->w;
     int base_h = p->surface->h;
 
-    
     p->rect.w = (int)(base_w * p->scale);
     p->rect.h = (int)(base_h * p->scale);
-
-
 }
 
 void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
@@ -87,22 +84,41 @@ void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
         }
     }
 }
+void UpdateEntityAnimation(Entity *e, double delta) {
 
+    for (int i = 0; i < NUMOFOBSTACLES; i++) {
+        if (e[i].isAttacked) {
+            e[i].currentRow = 1;
+            e[i].timePerFrame = 0.16;
+        } else {
+            e[i].currentRow = 0;
+            e[i].timePerFrame = 0.2;
+        }
+        e[i].animTimer += delta;
+
+        if (e[i].animTimer >= e[i].timePerFrame) {
+
+            e[i].animTimer = 0;
+            e[i].currentFrame++;
+            if (e[i].currentFrame >= e[i].totalFrames) {
+                e[i].currentFrame = 0;
+            }
+        }
+    }
+}
 
 void UpdatePlayerAnimation(Player *p, double delta) {
-    
+
     // 1. Wybór rzędu (Jaka to czynność?)
     if (p->actions.type == LIGHT_ATTACK || p->actions.type == HEAVY_ATTACK) {
         p->currentRow = 2; // Rząd 3 (index 2) w twoim pliku to atak
         // Opcjonalnie: przyspiesz animację ataku
-        p->timePerFrame = 0.1; 
-    } 
-    else if (p->direction.x != 0 || p->direction.y != 0) {
+        p->timePerFrame = 0.1;
+    } else if (p->direction.x != 0 || p->direction.y != 0) {
         p->currentRow = 1; // Rząd 2 (index 1) to chodzenie
         p->timePerFrame = 0.15;
-    } 
-    else {
-        p->currentRow = 0; // Rząd 1 (index 0) to stanie (idle)
+    } else {
+        p->currentRow = 0;     // Rząd 1 (index 0) to stanie (idle)
         p->timePerFrame = 0.2; // Wolniejsze "oddychanie"
     }
 
@@ -117,9 +133,9 @@ void UpdatePlayerAnimation(Player *p, double delta) {
         // Zapętlanie (1, 2, 3, 4 -> 1...)
         if (p->currentFrame >= p->totalFrames) {
             p->currentFrame = 0;
-            
-            // Fix dla ataku: Jeśli atak się skończył, można tu wyłączyć isAction
-            // ale na razie zostawmy proste pętlę.
+
+            // Fix dla ataku: Jeśli atak się skończył, można tu wyłączyć
+            // isAction ale na razie zostawmy proste pętlę.
         }
     }
 }
@@ -177,7 +193,8 @@ void actionsHandling(Player *p, double delta, GameSession *gs, GameState *gms) {
         DrawPlayerAttack(p, gs, gms);
 }
 
-SDL_Rect getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
+SDL_Rect
+getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna znać kamery
     SDL_Rect r = {0, 0, 0, 0}; // 1. Inicjalizacja zerami (bezpiecznik)
 
     // Jeśli nie ma ataku, zwracamy pusty prostokąt
@@ -215,31 +232,22 @@ SDL_Rect getAttackBox(Player *p) { // Usunąłem gms, bo logika nie powinna zna�
     return r;
 }
 
+void checkAttack(Player *p, Entity *e, GameState *gms) {
 
-void checkAttack(Player* p, Entity* e, GameState* gms){
-
-    for (int i = 0; i < NUMOFOBSTACLES; i++)
-    {
-        if(checkCollision(e[i].rect, getAttackBox(p))){
-            gms->players_points ++;
+    for (int i = 0; i < NUMOFOBSTACLES; i++) {
+        if (checkCollision(e[i].rect, getAttackBox(p))) {
+            gms->players_points++;
             return;
         }
     }
-    
-
-
 }
-
-
-
 
 SDL_Rect playerObstaclesHitbox(Player *p, int obsH) {
     SDL_Rect playerHitbox;
     playerHitbox.x = p->rect.x;
-    playerHitbox.y = p->rect.y + p->rect.h- obsH;
+    playerHitbox.y = p->rect.y + p->rect.h - obsH;
     playerHitbox.w = p->rect.w;
     playerHitbox.h = obsH;
-
 
     return playerHitbox;
 }
@@ -262,7 +270,7 @@ void restartGame(GameState *gms, GameSession *g) {
     *gms->camera_offset = 0;
 }
 
-Entity *createEntities(int numOfEntities) {
+Entity *createEntities(int numOfEntities, GameSession* gameSession) {
 
     Entity *entities = malloc(numOfEntities * sizeof(Entity));
     for (int i = 0; i < numOfEntities; i++) {
@@ -270,6 +278,28 @@ Entity *createEntities(int numOfEntities) {
         entities[i].rect.h = 30;
         entities[i].isInitialized = false;
         entities[i].health = 100;
+
+        entities[i].surface = SDL_LoadBMP("./textures/entity.bmp");
+        if (entities[i].surface == NULL) {
+
+            SDL_Quit();
+            return 1;
+        }
+
+        SDL_SetColorKey(entities[i].surface, SDL_TRUE,
+                        SDL_MapRGB(entities[i].surface->format, 255, 0, 255));
+
+        entities[i].texture = SDL_CreateTextureFromSurface(gameSession->renderer,
+                                                       entities[i].surface);
+        if (entities[i].texture == NULL) {
+
+            SDL_Quit();
+            return 1;
+        }
+
+
+        entities[i].frameHeight = 31;
+        entities[i].frameWidth = 31;
     }
 
     return entities;
@@ -475,7 +505,7 @@ void mainLoop(GameState *gms) {
         return;
     }
     SDL_Rect sky_rect = {0, 0, SCREEN_WIDTH, SCREEN_WIDTH / 4};
-    Entity *entities = createEntities(NUMOFOBSTACLES);
+    Entity *entities = createEntities(NUMOFOBSTACLES, gameSession);
 
     gms->entites = entities;
     EntitiesRandomPosition(entities, NUMOFOBSTACLES);
@@ -631,6 +661,7 @@ void mainLoop(GameState *gms) {
         checkAttack(player, entities, gms);
         actionsHandling(player, delta, gameSession, gms);
         UpdatePlayerAnimation(player, delta);
+        UpdateEntityAnimation(entities, delta);
         printf("checkCombo: %s\n", checkCombo(player));
         printf("CURRENT COMBO: %d DELAY: %lf\n", player->comboType.comboType,
                combo_delay);
@@ -678,7 +709,7 @@ void mainLoop(GameState *gms) {
         // jeśli chcesz przesuwać ekran. W przykładzie była używana.
 
         char text2[128];
-        
+
         DrawRectangle(gameSession->screen, 4, 4, SCREEN_WIDTH - 8, 36,
                       color(gameSession, RED), color(gameSession, BLUE));
         sprintf(text,
@@ -700,24 +731,23 @@ void mainLoop(GameState *gms) {
         sprintf(text, "HEALTH: %d ", player->remainingHp);
 
         DrawString(gameSession->screen, 6, 20, text, gameSession->charset);
-        
-        
 
         // fffffffffffffffffffffffff
-        RenderEntities(entities, NUMOFOBSTACLES, gameSession, camera_offset);
+        // RenderEntities(entities, NUMOFOBSTACLES, gameSession, camera_offset);
+        DrawEntityAnimation(gameSession, entities, camera_offset);
         DrawPlayerObstacleHitbox(player, 30, gms);
         DrawRectangle(gameSession->screen, player->position.x - camera_offset,
                       player->position.y + player->rect.h, 4, 4,
                       color(gameSession, RED), color(gameSession, BLUE));
-        
+
         SDL_RenderCopy(gameSession->renderer, gameSession->scrtex, NULL, NULL);
         sprintf(text2, "[ %d POINTS  ]", *gms->players_points);
         DrawString(gameSession->screen,
-                   gameSession->screen->w - strlen(text2) * 8, SCREEN_HEIGHT - 30,
-                   text2, gameSession->charset);
+                   gameSession->screen->w - strlen(text2) * 8,
+                   SCREEN_HEIGHT - 30, text2, gameSession->charset);
         // SDL_RenderCopy(gamestate->renderer, player->texture, NULL,
         // &player->rect);
-        
+
         SDL_UpdateTexture(gameSession->scrtex, NULL,
                           gameSession->screen->pixels,
                           gameSession->screen->pitch);
@@ -727,10 +757,9 @@ void mainLoop(GameState *gms) {
         //                 camera_offset, // X z uwzględnieniem kamery
         //             (int)player->position.y +
         //                 player->rect.h, // Y STÓP (Głowa + Wysokość)
-        //             player->rect.w,     // Szerokość (100) - bezpieczna z rect
-        //             player->rect.h,     // Wysokość (100) - bezpieczna z rect
-        //             player->scale,      // Twoja skala
-        //             0, flip);
+        //             player->rect.w,     // Szerokość (100) - bezpieczna z
+        //             rect player->rect.h,     // Wysokość (100) - bezpieczna z
+        //             rect player->scale,      // Twoja skala 0, flip);
         DrawPlayerAnimation(gameSession, player, *gms->camera_offset);
 
         SDL_RenderPresent(gameSession->renderer);

@@ -12,3 +12,5 @@ void RenderEntities(Entity* entities, int numOfEntites, GameSession* gs, int cam
 void DrawPlayerAttack(Player *p, GameSession *gs, GameState *gms);
 void DrawPlayerObstacleHitbox(Player *p, int obsH, GameState* gms);
 void DrawPlayerAnimation(GameSession *gs, Player *p, int cameraOffset);
+
+void DrawEntityAnimation(GameSession *gs, Entity *entities, int cameraOffset);
