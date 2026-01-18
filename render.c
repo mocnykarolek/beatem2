@@ -283,7 +283,7 @@ void RenderScene(GameSession* gameSession, GameState* gms,Entity* entities, doub
                    gameSession->screen->w / 2 - strlen(text) * 8 / 2, 10, text,
                    gameSession->charset);
         
-        if (debug) {
+        if (*debug) {
             sprintf(text2, "[ %s %s %s %s ]", player->recentActions[0],
                     player->recentActions[1], player->recentActions[2],
                     player->recentActions[3]);

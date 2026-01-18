@@ -5,9 +5,7 @@
 
 char *checkCombo(Player *p) {
     char **comboBuffer = p->recentActions;
-    int test = strcmp(comboBuffer[0], comboBuffer[1]) == 0 &&
-               strcmp(comboBuffer[2], "HEAVY") == 0 &&
-               strcmp(comboBuffer[0], "LIGHT") == 0;
+    
     
     if (strcmp(comboBuffer[0], comboBuffer[1]) == 0 &&
         strcmp(comboBuffer[2], "HEAVY") == 0 &&
@@ -47,34 +45,34 @@ void comboHandler(Player *p, double delta, GameSession *gs, GameState *gms) {
 
         switch (p->comboType.comboType) {
         case LEFT_DASH:
-            p->position.x += LEFT * p->speed * 2 * delta;
+            p->position.x += LEFT * p->speed * DASHCONST * delta;
 
             break;
         case RIGHT_DASH:
-            p->position.x += RIGHT * p->speed * 2 * delta;
+            p->position.x += RIGHT * p->speed * DASHCONST * delta;
 
             break;
         case UP_DASH:
-            p->position.y += UP * p->speed * 2 * delta;
+            p->position.y += UP * p->speed * DASHCONST * delta;
 
             break;
         case DOWN_DASH:
-            p->position.y += DOWN * p->speed * 2 * delta;
+            p->position.y += DOWN * p->speed * DASHCONST * delta;
 
             break;
         case SUPERCOMBO:
-            p->position.y += UP * p->speed * 0.6 * delta;
-            p->speed = PLAYER_SPEED * 0.3;
+            p->position.y += UP * p->speed * SUPERCOMBOSPEED * delta;
+            p->speed = PLAYER_SPEED * SPEEDMULTPSUPER;
             DrawPlayerAttack(p, gs, gms);
 
             break;
         case HEAVY_COMBO:
-            p->speed = PLAYER_SPEED * 0.4;
+            p->speed = PLAYER_SPEED * SPEEDMULTPHEAVY;
             DrawPlayerAttack(p, gs, gms);
 
             break;
         case LIGHT_COMBO:
-            p->speed = PLAYER_SPEED * 0.9;
+            p->speed = PLAYER_SPEED * SPEEDMULTPLIGHT;
             DrawPlayerAttack(p, gs, gms);
 
             break;
@@ -746,14 +744,14 @@ void gameLoop(GameState *gms) {
 
         timerOperations(&delta, &t2, &t1, &worldTime, &timer_s, &fpsTimer, player, &fps, &frames);
 
-        physics(player, entities, gameSession, gms, &quit, &flip, &timer_s, &debug, &delta);
+        physics(player, gms->entites, gameSession, gms, &quit, &flip, &timer_s, &debug, &delta);
 
         *gms->worldTime = worldTime;
         comboServing(player, &delta, gameSession, gms);
         
         updateCamera(gms);
         
-        RenderScene(gameSession, gms, entities, &worldTime, &fps, player, &debug);
+        RenderScene(gameSession, gms, gms->entites, &worldTime, &fps, player, &debug);
 
         frames++;
     }
